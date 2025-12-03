@@ -1,7 +1,9 @@
-# title: "Common Dataset"
+# title: "Simulate Common Dataset"
 # Script for a dataset set that can be used by all the models for comparison
 
-### -------------------- common_dataset ----------------------- ###
+### ONLY RUN THIS SCRIPT IF YOU WANT TO CHANGE THE PARAMETERS FOR THE SHARED DATASET ###
+
+### -------------------- simulate_common_dataset ----------------------- ###
 
 library(tidyverse)
 

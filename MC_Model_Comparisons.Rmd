@@ -1,0 +1,98 @@
+---
+title: "MC Model Comparisons"
+author: "Group 3"
+date: "2025-12-01"
+output: html_document
+---
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(MASS)
+library(GGally)
+library(tidymodels)
+library(glmnet)
+library(pROC)
+library(randomForest)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{green!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+
+\hstart
+
+# Minimum Liklihood, Ridge, and Random Forest: A Monte Carlo Model Comparison
+
+\hstop
+
+\hstart
+
+### 0. Source functions and simulated data for model comparisons
+
+\hstop
+
+```{r source functions}
+# sourcing method functions
+
+source("simulate_functions.R")  # for 
+
+```
+
+```{r simulated data}
+# sourcing simulated data
+
+simulated_data <- readRDS("data/simulated_data.rds")
+
+```
+
+\hstart
+
+### 1. Maximum Liklihood
+
+\hstop
+
+```{r maximum likelihood}
+# Maximum Likelihood
+
+
+```
+
+
+\hstart
+
+### 2. Ridge Regression
+
+\hstop
+
+```{r ridge regression}
+# ridge regression
+
+
+```
+
+
+\hstart
+
+### 3. Random Forest
+
+\hstop
+```{r random forest}
+# random forest
+
+
+```
+
+
+\hstart
+
+### 4. Comparisons
+
+\hstop
+
+```{r comparisons}
+# comparisons
+
+
+```
+

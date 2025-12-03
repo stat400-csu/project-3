@@ -1,0 +1,274 @@
+---
+title: "MC - Ridge Regression"
+author: "Andi Mellyn"
+date: "2025-12-01"
+output: html_document
+---
+
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(MASS)
+library(GGally)
+library(tidymodels)
+library(glmnet)
+library(pROC)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{green!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+
+\hstart
+
+# Monte Carlo Simulation using a Ridge Regression Model
+
+\hstop
+
+```{r sourcing functions}
+# sourcing the simulated functions
+
+source("simulate_functions.R")
+
+```
+
+```{r ridge logistic regression function}
+# ridge logistic regression function
+
+fit_logistic_ridge <- function(dat) {
+  # dat: data.frame with first column y and the rest predictors
+  
+  X <- as.matrix(dat[ , -1])  # all columns except the first
+  y <- dat$y                  # first column is y
+  
+  # alpha = 0 -> ridge penalty
+  cvfit <- cv.glmnet(
+    x = X,
+    y = y,
+    alpha = 0, 
+    family = "binomial"
+  )
+  
+  cvfit
+}
+
+```
+
+```{r evaluate ridge model}
+# ridge-specific evaluate model
+
+evaluate_ridge_model <- function(cvfit, dat) {
+  X <- as.matrix(dat[ , -1])
+  y <- dat$y
+  
+  # lambda.min from CV (the value that minimizes the error)
+  probs <- predict(cvfit, newx = X, type = "response", s = "lambda.min")
+  
+  auc_val <- pROC::auc(y, probs)
+  brier <- mean((y - probs)^2)
+  
+  tibble::tibble(
+    AUC = as.numeric(auc_val), # AUC: area under the ROC curve
+    Brier = brier, # brier: measure of the accuracy of probabilistic predictions
+    lambda = cvfit$lambda.min
+  )
+}
+
+```
+
+```{r test run}
+# testing the ridge model for one run
+
+set.seed(400)
+
+# simulating one dataset 
+dat_test <- simulate_logit(N = 1000, P = 8, rho = 0.5, beta_pattern = "strong")
+
+ridge_fit <- fit_logistic_ridge(dat_test)
+ridge_summary <- evaluate_ridge_model(ridge_fit, dat_test)
+
+ridge_summary
+
+```
+
+```{r}
+# Monte Carlo simulation settings
+
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+B <- 100  # number of Monte Carlo repetitions per condition
+
+```
+
+```{r Monte Carlo simulation}
+# Monte Carlo loop for ridge regression
+
+set.seed(400)
+
+ridge_results <- list()
+
+iter <- 1
+
+for (P in P_vals) {
+  for (rho in rho_vals) {
+    for (bp in beta_patterns) {
+      for (b in 1:B) {
+        
+        # simulate one dataset
+        dat <- simulate_logit(N = 1000, P = P, rho = rho, beta_pattern = bp)
+        
+        # fit ridge model
+        ridge_fit <- fit_logistic_ridge(dat)
+        
+        # evaluate performance on this dataset
+        ridge_summary <- evaluate_ridge_model(ridge_fit, dat)
+        
+        # store results
+        ridge_results[[iter]] <- tibble(
+          method = "ridge",
+          sim = b, 
+          P = P, 
+          rho = rho,
+          beta_pattern = bp,
+          AUC = ridge_summary$AUC,
+          Brier = ridge_summary$Brier,
+          lambda = ridge_summary$lambda
+        )
+        iter <- iter + 1
+        
+      }
+      
+    }
+    
+  }
+  
+}
+
+ridge_results_df <- bind_rows(ridge_results)
+head(ridge_results_df)
+
+```
+
+```{r ridge summary stats}
+
+# matching the research paper summary stats
+
+ridge_condition_summary <- ridge_results_df |>
+  group_by(P, rho, beta_pattern) |>
+  summarise(
+    n_sims = n(),
+    mean_AUC = mean(AUC),
+    sd_AUC = sd(AUC),
+    mean_Brier = mean(Brier), 
+    sd_Brier = sd(Brier),
+    mean_lambda = mean(lambda),
+    .groups = "drop"
+  )
+
+ridge_condition_summary
+knitr::kable(ridge_condition_summary, digits = 3)
+
+```
+
+```{r AUC plot}
+# AUC plot
+
+ggplot(ridge_condition_summary,
+       aes(x = factor(P), y = mean_AUC, group = factor(rho), color = factor(rho))) +
+  geom_point(size = 3) +
+  geom_line() +
+  facet_wrap(~ beta_pattern) +
+  labs(
+    title = "Ridge Regression: Mean AUC by Condition",
+    x = "Number of Predictors (P)",
+    y = "Mean AUC",
+    color = "Correlation (rho)"
+  ) +
+  geom_ribbon(aes(ymin = mean_AUC - sd_AUC,
+                ymax = mean_AUC + sd_AUC,
+                fill = factor(rho)),
+            alpha = 0.30, color = NA)
+
+```
+
+```{r Brier plot}
+# Brier plot
+
+ggplot(ridge_condition_summary,
+       aes(x = factor(P), y = mean_Brier, group = factor(rho), color = factor(rho))) +
+  geom_point(size = 3) +
+  geom_line() +
+  facet_wrap(~ beta_pattern) +
+  labs(
+    title = "Ridge Regression: Mean Brier Score by Condition",
+    x = "Number of Predictors (P)",
+    y = "Mean Brier Score",
+    color = "Correlation (rho)"
+  ) +
+  geom_ribbon(aes(ymin = mean_Brier - sd_Brier,
+                ymax = mean_Brier + sd_Brier,
+                fill = factor(rho)),
+            alpha = 0.15, color = NA)
+  
+
+
+```
+
+```{r ridge calibration setup}
+# calibration plot - how well do the predicted values line up with the actual observed values
+
+set.seed(400)
+
+# simulating a single dataset for calibration
+dat_cal <- simulate_logit(
+  N = 1000,
+  P = 8, 
+  rho = 0.5,
+  beta_pattern = "strong"
+)
+
+# fit ridge logistic regression
+ridge_fit_cal <- fit_logistic_ridge(dat_cal)
+
+```
+
+```{r ridge calibration data}
+
+# design matrix for glmnet
+X_cal <- as.matrix(dat_cal[ , -1])
+
+# predicted probabilities from the ridge model
+ridge_probs <- predict(
+  ridge_fit_cal,
+  newx = X_cal,
+  type = "response", 
+  s = "lambda.min"
+)
+
+# build calibration dataframe
+ridge_cal_df <- dat_cal |>
+  mutate(prob = as.numeric(ridge_probs),
+         decile = ntile(prob, 10)) |>
+  group_by(decile) |>
+  summarise(obs = mean(y), pred = mean(prob), .groups = "drop")
+
+ridge_cal_df
+  
+```
+
+```{r calibration plot}
+
+ggplot(ridge_cal_df, aes(x = pred, y = obs)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, color = "limegreen", linetype = 2) +
+  xlim(0, 1) + ylim(0, 1) +
+  labs(
+    title = "Calibration Plot – Ridge Logistic Regression"
+  )
+
+```
+

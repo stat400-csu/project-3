@@ -50,7 +50,56 @@ simulated_data <- readRDS("data/simulated_data.rds")
 
 \hstart
 
-### 1. Maximum Liklihood
+### 1. Background
+replicating "Sample size for binary logistic prediction models: Beyond events per variable criteria" by Smeden et al.
+
+out-of-sample performance of developed prediction models studied before and after regression shrinkage and variable selection
+
+concluded EPV does not have a strong relation with metrics of predictive eprformance and is not an appropriate cirterian for binary prediction model development studies
+
+better approximated by considering number of predictors, total sample size, and events fraction
+
+key contributing factor to predictive perfomrance is size of data set relative to number of predictors
+
+events per variable: ratio of number of events, the number of observations in smaller of two outcome groups, relative to the number of degrees of freedom/parameters required to represent the predictors considered in the model
+
+medical literature uses EPV of 10 as minimum but there is skepticism as to the validity of the scientific backing of this benchmark. in stepwise predictor selection, EPV greater than 50 may be needed. Good out-of-sample predictive performance demonstrated with regression shrinkage techniques with EPV less than 10.
+
+modeling:
+predictive performance evaluated on large sample validation data sets
+
+maximum likelihood (ML), ridge regression, LASSO, Firth's correction, heuristic shrinkage after ML estimation, backwards elimination predictor selection
+
+EPV, the events fraction, number of candidate predictors, area under the ROC curve, distribution of predictor variables, type of predictor variable effects
+
+factorial simulation study with 4,032 models
+5,000 simulation runs
+
+1. development data set generated
+    a. for each of N = EPV * P/Pr(Y = 1) individuals, draw predictor variable vector $\mathbf{x}_i$
+    b. for each individual, generate $y_i$ = Bernoulli($\pi_i$)
+2. fit binary logistic prediction models with each of the considered regression shrinkage and predictor selection strategies
+3. large validation data set generated, N* = 5000/Pr(Y = 1), using sampling approach from (1)
+4. evaluate performance of prediction models (2) on validation data (3)
+
+
+issues with maximum likelihood:
+
+1. not optimal for making model predictions of the expected risk in new individuals -- in most circumstances shrinkage estimators can be defined that have lower expected error for estimating probabilities in new individuals than ML estimators; benefit of shrinkage decreases with increasing EPV
+2. ML coefficients are biased toward more extreme effects; bias reduces with increasing EPV but may not completely dissapear
+3. model estimation becomes unstable when predictor effects are large or sparse -- results in extreme probability estimates close to boundaries of 0 or 1; less likely with increasing EPV
+4. estimation becomes unstable when predictors are strongly correlated, inflates standard errors for predictor effects; spurious colinearity less likely with increasing EPV
+
+Ridge regression:
+penalizes the likelihood proportionally to the sum of squared predictor effects
+
+predictors standardized to have mean zero and unit variance
+
+10-fold cross validation used to determine the optimal value for the tuning parameter
+
+used to deal with colinearity (4), can also be used to deal with separation (3)
+
+### 2. Maximum Liklihood
 
 \hstop
 
@@ -63,7 +112,7 @@ simulated_data <- readRDS("data/simulated_data.rds")
 
 \hstart
 
-### 2. Ridge Regression
+### 3. Ridge Regression
 
 \hstop
 
@@ -73,10 +122,9 @@ simulated_data <- readRDS("data/simulated_data.rds")
 
 ```
 
-
 \hstart
 
-### 3. Random Forest
+### 4. Random Forest
 
 \hstop
 ```{r random forest}
@@ -88,7 +136,7 @@ simulated_data <- readRDS("data/simulated_data.rds")
 
 \hstart
 
-### 4. Comparisons
+### 5. Comparisons
 
 \hstop
 

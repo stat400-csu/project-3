@@ -84,6 +84,13 @@ factorial simulation study with 4,032 models
 3. large validation data set generated, N* = 5000/Pr(Y = 1), using sampling approach from (1)
 4. evaluate performance of prediction models (2) on validation data (3)
 
+measures of performance:
+- average loss of area under ROC curve: average difference between AUC of generated data and AUC of model (defined by distribution of predictor variables); higher values closer to zero indicate better discriminative performance
+- median calibration slope (CS): closer to 1 = better performance, cs < 1 = overfitting, cs > 1 = underfitting
+- average calibration in the large (CIL): difference between generated evens fraction and average estimated probabilities $\frac{\sum_{i} y_i}{N} - \frac{\sum_i \hat{\pi}_i}{N}$; closer to 0 = better performance, CIL > 0 = systematic overestimation of estimated probabilities, CIL < 0 = underestimation
+- average Brier score
+- square root of mean squared prediction error
+- mean absolute prediction error
 
 issues with maximum likelihood:
 
@@ -101,6 +108,16 @@ predictors standardized to have mean zero and unit variance
 
 used to deal with collinearity (4), can also be used to deal with separation (3)
 
+GLMnet used to estimate Ridge, logistf used to estimate ML, MASS used to generate predictor data
+
+results:
+- improved predictive performance when EPV increased
+- little association between Brier and EPV beyond EPV 20
+- CIL consistently close to perfect average except for Firth
+- CS improved with increasing EPV
+- all models except for Ridge showed signs of overfitting (CS above 1)
+- impact of shrinkage lessened with increasing EPV
+- little variation in Brier and CIL between shrinkage strategies
 ### 2. Maximum Liklihood
 
 \hstop

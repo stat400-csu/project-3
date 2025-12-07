@@ -14,6 +14,12 @@ library(tibble)
 library(ggplot2)
 ```
 
+```{r}
+library(MASS)
+ggplot()
+
+```
+
 ```{r echo=FALSE, results='hide', include=FALSE, message=FALSE}
 simulate_logit <- function(N, P, rho, beta_pattern) {
   Sigma <- matrix(rho, P, P)

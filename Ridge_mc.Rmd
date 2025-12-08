@@ -2,7 +2,9 @@
 title: "MC - Ridge Regression"
 author: "Andi Mellyn"
 date: "2025-12-01"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 \colorlet{shadecolor}{gray!10}

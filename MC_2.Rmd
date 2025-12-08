@@ -1,0 +1,253 @@
+---
+title: "MC_2"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r message=FALSE}
+library(MASS)
+library(pROC)
+library(dplyr)
+library(glmnet)
+library(tibble)
+library(ggplot2)
+```
+
+```{r echo=FALSE, results='hide', include=FALSE, message=FALSE}
+simulate_logit <- function(N, P, rho, beta_pattern) {
+  Sigma <- matrix(rho, P, P)
+  diag(Sigma) <- 1
+  
+  X <- mvrnorm(n = N, mu = rep(0, P), Sigma = Sigma)
+  
+  if (beta_pattern == "equal") {
+    beta <- rep(0.5, P)
+  } else if (beta_pattern == "strong") {
+    beta <- c(1.0, rep(0.2, P-1))
+  } else if (beta_pattern == "noise") {
+    beta <- c(0, rep(0.3, P-1))
+  } else if (beta_pattern == "halfnoise") {
+    beta <- c(rep(0, P/2), rep(0.3, P/2))
+  } else {
+    stop("Unknown beta pattern")
+  }
+  
+  eta <- X %*% beta
+  pi  <- 1/(1 + exp(-eta))
+  y <- rbinom(N, 1, pi)
+  
+  data.frame(y = y, X)
+}
+
+```
+
+
+```{r echo=FALSE, results='hide', include=FALSE, message=FALSE}
+fit_logistic_mle <- function(dat) {
+  glm(y ~ ., data = dat, family = binomial)
+}
+
+evaluate_mle_model <- function(fit, dat) {
+  probs <- predict(fit, type = "response")
+  auc_val <- auc(dat$y, probs)
+  brier <- mean((dat$y - probs)^2)
+  
+  tibble(AUC = as.numeric(auc_val), Brier = brier, lambda = NA)
+}
+
+```
+
+
+```{r echo=FALSE, results='hide', include=FALSE, message=FALSE}
+fit_logistic_ridge <- function(dat) {
+  X <- as.matrix(dat[, -1])
+  y <- dat$y
+  
+  cv.glmnet(x = X, y = y, alpha = 0, family = "binomial")
+}
+
+evaluate_ridge_model <- function(cvfit, dat) {
+  X <- as.matrix(dat[, -1])
+  y <- dat$y
+  
+  probs <- predict(cvfit, newx = X, type = "response", s = "lambda.min")
+  
+  auc_val <- auc(y, probs)
+  brier <- mean((y - probs)^2)
+  
+  tibble(
+    AUC = as.numeric(auc_val),
+    Brier = brier,
+    lambda = cvfit$lambda.min
+  )
+}
+
+```
+
+
+```{r echo=FALSE, results='hide', include=FALSE, message=FALSE, warning=FALSE}
+set.seed(500)
+
+EPV_vals <- c(5, 10, 50)
+event_frac <- 0.5    # FIXED
+
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+B <- 10  # number of Monte Carlo repetitions
+
+all_results <- list()
+iter <- 1
+
+for (EPV in EPV_vals) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
+          
+          # Determine total sample size
+          N <- ceiling((EPV * P) / event_frac)
+          
+          # Simulate dataset
+          dat <- simulate_logit(N, P, rho, bp)
+          
+          ### MLE ###
+          fit_mle <- fit_logistic_mle(dat)
+          eval_mle <- evaluate_mle_model(fit_mle, dat)
+          eval_mle$model <- "MLE"
+          
+          ### Ridge ###
+          fit_ridge <- fit_logistic_ridge(dat)
+          eval_ridge <- evaluate_ridge_model(fit_ridge, dat)
+          eval_ridge$model <- "Ridge"
+          
+          ### Store combined ###
+          combined <- bind_rows(eval_mle, eval_ridge) %>%
+            mutate(
+              EPV = EPV,
+              P = P,
+              rho = rho,
+              beta_pattern = bp,
+              sim = b
+            )
+          
+          all_results[[iter]] <- combined
+          iter <- iter + 1
+        }
+      }
+    }
+  }
+}
+
+results_df <- bind_rows(all_results)
+
+```
+## Main Findings
+
+1. When EPV is small (EPV=5), Ridge performs better overall than MLE, showing:
+* higher or similar AUC
+* lower Brier scores
+* much lower variance
+* more realistic estimates when predictors are correlated
+
+2. At EPV=10, both methods perform comparably,
+* Although, Ridge remains slightly more stable, especially in the presence of noisy predictors.
+
+3. At EPV=50, MLE and Ridge are almost identical, because shrinkage is no longer needed.
+
+4. Ridge's adaptive penalty $(\lambda)$ adjusts appropriately:
+* strong shrinkage at low EPV
+* minimal shrinkage at high EPV
+
+$\rightarrow$ Ridge regression is advantageous when EPV is low or when predictors contain noise or are correlated. When EPV is sufficiently high $(\ge50)$, both methods perform equivalently.
+```{r}
+summary_df <- results_df %>%
+  group_by(model, EPV, P, rho, beta_pattern) %>%
+  summarise(
+    mean_AUC = mean(AUC),
+    sd_AUC = sd(AUC),
+    mean_Brier = mean(Brier),
+    sd_Brier = sd(Brier),
+    mean_lambda = mean(lambda, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+knitr::kable(summary_df, digits = 3)
+```
+
+```{r}
+ggplot(summary_df, aes(x = factor(P), y = mean_AUC,
+                       color = model, group = model)) +
+  geom_point(size = 3) +
+  geom_line() +
+  facet_grid(EPV ~ beta_pattern) +
+  labs(
+    title = "AUC Comparison: MLE vs Ridge Logistic Regression",
+    x = "Number of Predictors (P)",
+    y = "Mean AUC"
+  )
+
+```
+
+```{r}
+ggplot(summary_df,
+       aes(x = factor(P),
+           y = mean_AUC,
+           color = factor(rho),
+           group = factor(rho))) +
+
+  # Points + lines
+  geom_point(size = 3) +
+  geom_line() +
+
+  # Ribbons for uncertainty
+  geom_ribbon(
+    aes(ymin = mean_AUC - sd_AUC,
+        ymax = mean_AUC + sd_AUC,
+        fill = factor(rho)),
+    alpha = 0.25,
+    color = NA
+  ) +
+
+  facet_grid(model ~ beta_pattern) +
+
+  labs(
+    title = "AUC: MLE vs Ridge",
+    x = "Number of Predictors (P)",
+    y = "Mean AUC",
+    color = "Correlation (rho)",
+    fill  = "Correlation (rho)"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+```
+
+```{r fig.width=12, fig.height=8}
+ggplot(summary_df,
+       aes(x = factor(P),
+           y = mean_AUC,
+           color = factor(rho),
+           group = factor(rho))) +
+  geom_point(size = 2.8) +
+  geom_line(linewidth = 0.8) +
+  geom_ribbon(aes(ymin = mean_AUC - sd_AUC,
+                  ymax = mean_AUC + sd_AUC,
+                  fill = factor(rho)),
+              alpha = 0.25,
+              color = NA) +
+  facet_grid(model ~ beta_pattern) +
+  labs(
+    title = "AUC: MLE vs Ridge",
+    x = "Number of Predictors (P)",
+    y = "Mean AUC",
+    color = "Correlation (rho)",
+    fill  = "Correlation (rho)"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+
+

@@ -20,6 +20,12 @@ Predictors:
 
 results in $3 \times 2 \times 4$ factor study with 24 models
 
+## TODO:
+- fix event fraction, $P(Y = 1)$
+    - propose 1/2 because that's what the graph shows
+   
+- determine predictors -- addition of EPV, removal of ???
+    - follow up to selecting EPV: figure shows EPV = 5, 10, 50 that we could replicate
 ## Model Analysis:
 
 - Ridge - Andi

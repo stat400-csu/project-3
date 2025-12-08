@@ -16,8 +16,10 @@ library(tidymodels)
 library(glmnet)
 library(pROC)
 library(randomForest)
+library(dplyr)
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE)
 ```
+
 \newcommand{\hstart}{ \colorlet{shadecolor}{green!20}
 \begin{shaded} }
 \newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
@@ -55,15 +57,15 @@ replicating "Sample size for binary logistic prediction models: Beyond events pe
 
 out-of-sample performance of developed prediction models studied before and after regression shrinkage and variable selection
 
-concluded EPV does not have a strong relation with metrics of predictive eprformance and is not an appropriate cirterian for binary prediction model development studies
+concluded EPV does not have a strong relation with metrics of predictive performance and is not an appropriate cirterian for binary prediction model development studies
 
 better approximated by considering number of predictors, total sample size, and events fraction
 
-key contributing factor to predictive perfomrance is size of data set relative to number of predictors
+key contributing factor to predictive performance is size of data set relative to number of predictors
 
 events per variable: ratio of number of events, the number of observations in smaller of two outcome groups, relative to the number of degrees of freedom/parameters required to represent the predictors considered in the model
 
-medical literature uses EPV of 10 as minimum but there is skepticism as to the validity of the scientific backing of this benchmark. in stepwise predictor selection, EPV greater than 50 may be needed. Good out-of-sample predictive performance demonstrated with regression shrinkage techniques with EPV less than 10.
+medical literature uses EPV of 10 as minimum but there is skepticism as to the validity of the scientific backing of this benchmark. in step-wise predictor selection, EPV greater than 50 may be needed. Good out-of-sample predictive performance demonstrated with regression shrinkage techniques with EPV less than 10.
 
 modeling:
 predictive performance evaluated on large sample validation data sets
@@ -82,13 +84,20 @@ factorial simulation study with 4,032 models
 3. large validation data set generated, N* = 5000/Pr(Y = 1), using sampling approach from (1)
 4. evaluate performance of prediction models (2) on validation data (3)
 
+measures of performance:
+- average loss of area under ROC curve: average difference between AUC of generated data and AUC of model (defined by distribution of predictor variables); higher values closer to zero indicate better discriminative performance
+- median calibration slope (CS): closer to 1 = better performance, cs < 1 = overfitting, cs > 1 = underfitting
+- average calibration in the large (CIL): difference between generated evens fraction and average estimated probabilities $\frac{\sum_{i} y_i}{N} - \frac{\sum_i \hat{\pi}_i}{N}$; closer to 0 = better performance, CIL > 0 = systematic overestimation of estimated probabilities, CIL < 0 = underestimation
+- average Brier score
+- square root of mean squared prediction error
+- mean absolute prediction error
 
 issues with maximum likelihood:
 
 1. not optimal for making model predictions of the expected risk in new individuals -- in most circumstances shrinkage estimators can be defined that have lower expected error for estimating probabilities in new individuals than ML estimators; benefit of shrinkage decreases with increasing EPV
-2. ML coefficients are biased toward more extreme effects; bias reduces with increasing EPV but may not completely dissapear
+2. ML coefficients are biased toward more extreme effects; bias reduces with increasing EPV but may not completely disappear
 3. model estimation becomes unstable when predictor effects are large or sparse -- results in extreme probability estimates close to boundaries of 0 or 1; less likely with increasing EPV
-4. estimation becomes unstable when predictors are strongly correlated, inflates standard errors for predictor effects; spurious colinearity less likely with increasing EPV
+4. estimation becomes unstable when predictors are strongly correlated, inflates standard errors for predictor effects; spurious collinearity less likely with increasing EPV
 
 Ridge regression:
 penalizes the likelihood proportionally to the sum of squared predictor effects
@@ -97,12 +106,23 @@ predictors standardized to have mean zero and unit variance
 
 10-fold cross validation used to determine the optimal value for the tuning parameter
 
-used to deal with colinearity (4), can also be used to deal with separation (3)
+used to deal with collinearity (4), can also be used to deal with separation (3)
 
+GLMnet used to estimate Ridge, logistf used to estimate ML, MASS used to generate predictor data
 
 \hstop
 
 \hstart
+
+=======
+results:
+- improved predictive performance when EPV increased
+- little association between Brier and EPV beyond EPV 20
+- CIL consistently close to perfect average except for Firth
+- CS improved with increasing EPV
+- all models except for Ridge showed signs of overfitting (CS above 1)
+- impact of shrinkage lessened with increasing EPV
+- little variation in Brier and CIL between shrinkage strategies
 
 ### 2. Maximum Liklihood
 
@@ -111,6 +131,136 @@ used to deal with colinearity (4), can also be used to deal with separation (3)
 ```{r maximum likelihood}
 # Maximum Likelihood
 
+
+```
+
+
+
+```{r}
+
+simulate_logit <- function(N, P, rho, beta_pattern) {
+  
+  # Predictor distribution 
+  # Correlation = rho (0 or 0.5)
+  Sigma <- matrix(rho, P, P)
+  diag(Sigma) <- 1
+  
+  X <- mvrnorm(n = N, mu = rep(0, P), Sigma = Sigma)
+  
+  # Predictor effects 
+  if (beta_pattern == "equal") {
+    beta <- rep(0.5, P)
+    
+  } else if (beta_pattern == "strong") {
+    beta <- c(1.0, rep(0.2, P-1))      # 1 strong effect
+    
+  } else if (beta_pattern == "noise") {
+    beta <- c(0, rep(0.3, P-1))        # first predictor is noise
+    
+  } else if (beta_pattern == "halfnoise") {
+    beta <- c(rep(0, P/2), rep(0.3, P/2))  # first half noise
+  
+  } else {
+    stop("Unknown beta pattern")
+  }
+  
+  # Linear predictor + logistic link
+  eta <- X %*% beta
+  pi  <- 1/(1 + exp(-eta))
+  
+  # Binary outcome from Bernoulli
+  y <- rbinom(N, size = 1, prob = pi)
+  
+  data.frame(y = y, X)
+}
+
+```
+
+```{r}
+fit_logistic_mle <- function(dat) {
+  glm(y ~ ., data = dat, family = binomial)
+}
+
+```
+
+```{r}
+evaluate_model <- function(fit, dat) {
+  
+  probs <- predict(fit, type = "response")
+  
+  auc_val <- auc(dat$y, probs)
+  brier <- mean((dat$y - probs)^2)
+  
+  tibble::tibble(
+    # AUC: Area Under the ROC Curve
+    AUC = as.numeric(auc_val),
+    # brier: measure of the accuracy of probabilistic predictions
+    Brier = brier
+  )
+}
+
+```
+
+```{r}
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+results <- list()
+iter <- 1
+
+for (P in P_vals) {
+  for (rho in rho_vals) {
+    for (bp in beta_patterns) {
+      
+      # One simulation run
+      dat <- simulate_logit(N = 1000, P = P, rho = rho, beta_pattern = bp)
+      
+      # Maximum likelihood fit
+      fit <- fit_logistic_mle(dat)
+      
+      # Evaluate predictive performance
+      perf <- evaluate_model(fit, dat)
+      
+      # Save results
+      results[[iter]] <- cbind(
+        P = P,
+        rho = rho,
+        beta_pattern = bp,
+        perf
+      )
+      
+      iter <- iter + 1
+    }
+  }
+}
+
+final_results <- bind_rows(results)
+knitr::kable(final_results)
+
+```
+
+```{r}
+roc_obj <- roc(dat$y, predict(fit, type="response"))
+plot(roc_obj, col="rosybrown", lwd=2)
+
+```
+
+```{r}
+library(ggplot2)
+
+cal_df <- dat %>%
+  mutate(prob = predict(fit, type="response"),
+         decile = ntile(prob, 10)) %>%
+  group_by(decile) %>%
+  summarize(obs = mean(y), pred = mean(prob))
+
+ggplot(cal_df, aes(pred, obs)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, color = "yellow4", lty = 2) +
+  ylim(0,1) + xlim(0,1) +
+  ggtitle("Calibration Plot")
 
 ```
 

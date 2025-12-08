@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE
 
 \hstart
 
-# Minimum Liklihood, Ridge, and Random Forest: A Monte Carlo Model Comparison
+# Maximum Liklihood, Ridge, and Random Forest: A Monte Carlo Model Comparison
 
 \hstop
 
@@ -98,6 +98,11 @@ predictors standardized to have mean zero and unit variance
 10-fold cross validation used to determine the optimal value for the tuning parameter
 
 used to deal with colinearity (4), can also be used to deal with separation (3)
+
+
+\hstop
+
+\hstart
 
 ### 2. Maximum Liklihood
 

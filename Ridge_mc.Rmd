@@ -95,7 +95,7 @@ ridge_summary
 ```{r}
 # Monte Carlo simulation settings
 
-EPV_vals <- c(3, 10, 50)         # subset -> research study uses 7 values
+EPV_vals <- c(5, 10, 50)         # subset -> research study uses 7 values
 event_frac_vals <- c(1/2, 1/8)   # subset -> research study uses 4 fractions
 P_vals <- c(4, 8, 12)            # same p-vals as study
 rho_vals <- c(0, 0.3, 0.5)       # same continuous predictors

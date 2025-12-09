@@ -251,8 +251,8 @@ ggplot(summary_df,
 
 ```{r}
 # saving the monte carlo simulation results for comparisons
-
-saveRDS(results_df, file = "results_files/MLE_mc_results.rds")
+if (!dir.exists("results_files")) dir.create("results_files")
+saveRDS(results_df, file = "results_files/MLE_ridge_mc_results.rds")
 ```
 
 

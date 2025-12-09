@@ -135,7 +135,7 @@ for (EPV in EPV_vals) {
         
           # store results
           ridge_results[[iter]] <- tibble(
-            method = "ridge",
+            model = "ridge",
             EPV = EPV,
             sim = b, 
             P = P, 
@@ -291,9 +291,11 @@ ggplot(ridge_cal_df, aes(x = pred, y = obs)) +
 
 ```
 
-\hstart
+```{r}
+# saving the monte carlo simulation results for comparisons
 
-# Compare Ridge to MLE and Forest
+if (!dir.exists("results_files")) dir.create("results_files")
+saveRDS(ridge_results_df, file = "results_files/ridge_mc_results.rds")
+```
 
-\hstop
 

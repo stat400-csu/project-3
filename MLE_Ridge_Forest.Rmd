@@ -22,6 +22,94 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALS
 
 \hstart
 
-# Compare the 3 Models
+# MLE vs. Ridge Regression vs. Random Forest
+
+We compare the three modeling approaches under the same Monte Carlo simulation design used earlier.
 
 \hstop
+
+```{r}
+# loading Monte Carlo results datasets
+
+mle_df <- readRDS("results_files/mle_mc_results.rds")
+# ridge_df <- readRDS("results_files/ridge_mc_results.rds")
+
+```
+
+```{r}
+# creating a master table
+all_results <- bind_rows(mle_df)
+head(all_results)
+
+```
+
+\hstart
+
+### Boxplots
+AUC boxplot distribution
+
+\hstop
+
+```{r}
+# AUC
+ggplot(all_results, aes(x = model, y = AUC, fill = model)) +
+  geom_boxplot(alpha = 0.7, outlier.alpha = 0.3) +
+  facet_grid(EPV ~ P) +
+  labs(title = "AUC Distribution Across Methods",
+       x = "Model", 
+       y = "AUC")
+
+```
+
+```{r}
+# Briar
+ggplot(all_results, aes(x = model, y = Brier, fill = model)) +
+  geom_boxplot(alpha = 0.7, outlier.alpha = 0.3) +
+  facet_grid(EPV ~ P) +
+  labs(title = "Brier Score Distribution Across Methods", 
+       x = "Model", 
+       y = "Brier Score")
+
+```
+
+```{r}
+# compute means for heatmap
+# method * EPV * P
+
+mean_results <- all_results |>
+  group_by(model, EPV, P) |>
+  summarise(mean_AUC = mean(AUC), mean_Brier = mean(Brier), .groups = "drop")
+
+mean_results
+
+ 
+```
+
+```{r}
+# heatmap for mean AUC
+
+ggplot(mean_results, aes(x = factor(P), y = factor(EPV), fill = mean_AUC)) +
+  geom_tile() +
+  facet_wrap(~ model) + 
+  scale_fill_viridis_c(option = "plasma") +
+  labs(title = "Heatmap of Mean AUC",
+    x = "Number of Predictors (P)",
+    y = "EPV",
+    fill = "Mean AUC"
+  )
+
+```
+
+```{r}
+ggplot(mean_results, aes(x = factor(P), y = factor(EPV), fill = mean_Brier)) +
+  geom_tile() +
+  facet_wrap(~ model) + 
+  scale_fill_viridis_c(option = "magma") +
+  labs(title = "Heatmap of Mean Brier Score",
+    x = "Number of Predictors (P)",
+    y = "EPV",
+    fill = "Mean Brier"
+  )
+
+```
+

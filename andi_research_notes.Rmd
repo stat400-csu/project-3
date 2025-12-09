@@ -1,0 +1,94 @@
+---
+title: "Research Notes"
+author: "Andi"
+date: "2025-12-07"
+output: html_document
+---
+
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(MASS)
+library(GGally)
+library(tidymodels)
+library(glmnet)
+library(pROC)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{green!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+
+\hstart
+
+### Sample size for binary logistic prediction models: Beyond events per variable criteria
+
+\hstop
+
+\hstart
+
+### Citation APA:
+
+van Smeden, M., Moons, K. G. M., de Groot, J. A. H., Collins, G. S., Altman, D. G., Eijkemans, M. J. C., & Reitsma, J. B. (2019). Sample size for binary logistic prediction models: Beyond events per variable criteria. Statistical Methods in Medical Research, 28(8), 2455–2474. https://doi.org/10.1177/0962280218784726
+
+\hstop
+
+\hstart
+
+#### Abstract:
+
+Logistic regression is often used in clinical settings with a long-held standard is to use EPV (events per variable) ≥ 10 in order to decide on the minimal sample size and the maximum number of predictors to make the study stable. Events per variable is a ratio of the number of events / number of predictors. Having too small of a sample size or too large of a number of predictors the study can become unreliable.
+
+A simulation study is presented that studies the influence of EPV, the events fraction, and the number of possible predictors. The predictive performance of correlations, distributions of possible predictor variables, and predictor effects on new simulated sample data are compared using methods such as rMSPE, calibration slope, and AUC.
+
+The studies results indicate that EPV does not have a strong relation with the metrics of predictive performance. They suggest that predictive performance can be better approximated by considering 3 factors instead: the number of predictors, total sample size, and the events fraction (a ratio of positive outcomes over the total outcomes).
+
+
+\hstop
+
+\hstart
+
+#### 1. Introduction
+
+\hstop
+
+\hstart
+
+#### 2. Developing a prediction model using logistic regression
+
+\hstop
+
+\hstart
+
+#### 3. Methods
+
+\hstop
+
+\hstart
+
+#### 4. Results
+
+\hstop
+
+\hstart
+
+#### 5. Discussion
+
+\hstop
+
+\hstart
+
+#### Conclusions:
+
+- suggest a new way for determining sample size based on actual predictive error instead of EPV cutoffs
+
+\hstop
+
+\hstart
+
+#### Other Considerations:
+
+Methods that are newer such as bootstrap validation offer sample size calculators to predict error, not just EPV.
+
+\hstop

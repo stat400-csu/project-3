@@ -5,20 +5,70 @@ format: revealjs
 editor: visual
 ---
 
-## Sample Size for Binary Logistic Prediction Models: Beyond events per variable criteria
+## Research Study 
 
-Research paper
+<br>
+
+Sample size for binary logistic prediction models: beyond events per variable criteria, Maarten et. al
+
+*Statistical Methods in Medical Research*
+
+## Abstract
+
+<br>
+
+Logistic regression is often used in clinical settings.
+
+-   Long-held standard is to use EPV (events per variable) ≥ 10 to decide minimum sample size & maximum number of predictors to use in a study.
+
+-   Events per variable is a ratio of the number of events / number of predictors.
+
+Simulation study:
+
+-   studies the influence of EPV, the events fraction, & the number of possible predictors
+
+-   predictive performance of correlations, distributions of possible predictor variables, & predictor effects on new simulated sample data are compared
+
+Comparison methods:
+
+-   rMPSE
+
+-   calibration slope
+
+-   AUC
+
+Outcome:
+
+-   research study indicates that EPV does not have a strong relation with the metrics of predictive performance
+
+-   suggest using 3 factors instead: number of predictors, total sample size, & the events fraction (a ratio of positive outcomes over the total outcomes)
 
 ## Maximum Likelihood
 
+<br>
+
 ## Ridge Logistic Regression
+
+<br>
 
 ## Random Forest
 
+<br>
+
 ## Maximum Likelihood vs. Ridge
+
+<br>
 
 ## Random Forest vs. MLE & Ridge
 
+<br>
+
+## Results
+
+<br>
+
 ## Conclusion
+
+<br>
 
 ## 

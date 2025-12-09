@@ -27,6 +27,16 @@ editor: visual
 
     -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
 
+## Our Implementation
+
+### Questions
+
+-   What effect does EPV have on out-of-sample prediction for logistic regression?
+
+-   What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
+
+-   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
+
 ## Maximum Likelihood
 
 ## Ridge Logistic Regression

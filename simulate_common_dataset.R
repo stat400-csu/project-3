@@ -11,12 +11,20 @@ source("simulate_functions.R")
 
 set.seed(400)
 
+# one representative scenario
+EPV <- 10
+event_frac <- 0.5
+P <- 8 
+rho <- 0.5
+beta_pattern <- "strong"
+
 # simulate the dataset using logistic regression
 dat_common <- simulate_logit(
-  N = 1000, 
-  P = 8, 
-  rho = 0.5,
-  beta_pattern = "strong"
+  EPV = EPV,
+  event_frac = event_frac,
+  P = P,
+  rho = rho,
+  beta_pattern = beta_pattern
 )
 
 if(!dir.exists("data")) dir.create("data")

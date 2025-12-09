@@ -5,24 +5,31 @@ format: revealjs
 editor: visual
 ---
 
-## Research Study 
+## Research Study
 
-<<<<<<< HEAD
 <br>
 
 Sample size for binary logistic prediction models: beyond events per variable criteria, Maarten et. al
 
 *Statistical Methods in Medical Research*
 
-## Abstract
+## Simulation Study
 
 <br>
 
-Logistic regression is often used in clinical settings.
+Clinical simulation studies for binary outcomes
 
--   Long-held standard is to use EPV (events per variable) ≥ 10 to decide minimum sample size & maximum number of predictors to use in a study.
+-   want accurate predictions on new data
 
--   Events per variable is a ratio of the number of events / number of predictors.
+-   *Events Per Variable* (EPV), a ratio of the number of events to the number of degrees of freedom
+
+    -   think signal to noise
+
+    -   used to decide the minimum sample size & maximum number of predictors to use in a study
+
+    -   standard is EPV ≥ 10
+
+-   EPV has shown to be either too lenient or too strict depending on the modeling strategy & does not strongly relate to prediction accuracy
 
 Simulation study:
 
@@ -37,22 +44,6 @@ Comparison methods:
 -   calibration slope
 
 -   AUC
-
-Outcome:
-
--   research study indicates that EPV does not have a strong relation with the metrics of predictive performance
-
--   suggest using 3 factors instead: number of predictors, total sample size, & the events fraction (a ratio of positive outcomes over the total outcomes)
-=======
--   clinical simulation studies for binary outcomes
-
-    -   want accurate predictions on new data
-
--   *Events Per Variable* (EPV), the ratio of the number of events in the smaller class to the number of degrees of freedom
-
-    -   think signal to noise
-
-    -   minimum of 10 is standard
 
 ## Simulation Study
 
@@ -73,7 +64,18 @@ Outcome:
 -   What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
 
 -   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
->>>>>>> caa24af61a94b7be6fb950a51b911dce7c944e05
+
+### Variation in Monte Carlo Study: Subset of original study
+
+-   EPV values
+
+-   number of predictors
+
+-   correlation in the predictors
+
+-   beta patterns
+
+-   event fraction -\> kept stable
 
 ## Maximum Likelihood
 
@@ -82,6 +84,10 @@ Outcome:
 ## Ridge Logistic Regression
 
 <br>
+
+-   adds an L2 penalty to shrink the coefficients toward zero
+
+-   reduces overfitting when predictors are correlated or sample size is small
 
 ## Random Forest
 
@@ -102,5 +108,11 @@ Outcome:
 ## Conclusion
 
 <br>
+
+Outcome:
+
+-   research study indicates that EPV does not have a strong relation with the metrics of predictive performance
+
+-   suggest using 3 factors instead: number of predictors, total sample size, & the events fraction (a ratio of positive outcomes over the total outcomes)
 
 ## 

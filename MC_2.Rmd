@@ -249,5 +249,10 @@ ggplot(summary_df,
   theme_minimal(base_size = 14)
 ```
 
+```{r}
+# saving the monte carlo simulation results for comparisons
+
+saveRDS(results_df, file = "results_files/MLE_mc_results.rds")
+```
 
 

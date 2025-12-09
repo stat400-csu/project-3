@@ -1,0 +1,27 @@
+---
+title: "MLE_Ridge_Forest"
+author: "Group 3"
+date: "2025-12-07"
+output: html_document
+---
+
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(MASS)
+library(GGally)
+library(tidymodels)
+library(glmnet)
+library(pROC)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE)
+```
+\newcommand{\hstart}{ \colorlet{shadecolor}{green!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+
+\hstart
+
+# Compare the 3 Models
+
+\hstop

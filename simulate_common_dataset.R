@@ -11,6 +11,7 @@ source("simulate_functions.R")
 
 set.seed(400)
 
+# simulate the dataset using logistic regression
 dat_common <- simulate_logit(
   N = 1000, 
   P = 8, 

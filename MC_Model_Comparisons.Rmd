@@ -26,7 +26,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = TRUE
 
 \hstart
 
-# Minimum Liklihood, Ridge, and Random Forest: A Monte Carlo Model Comparison
+# Maximum Liklihood, Ridge, and Random Forest: A Monte Carlo Model Comparison
 
 \hstop
 
@@ -110,6 +110,11 @@ used to deal with collinearity (4), can also be used to deal with separation (3)
 
 GLMnet used to estimate Ridge, logistf used to estimate ML, MASS used to generate predictor data
 
+\hstop
+
+\hstart
+
+=======
 results:
 - improved predictive performance when EPV increased
 - little association between Brier and EPV beyond EPV 20
@@ -118,6 +123,7 @@ results:
 - all models except for Ridge showed signs of overfitting (CS above 1)
 - impact of shrinkage lessened with increasing EPV
 - little variation in Brier and CIL between shrinkage strategies
+
 ### 2. Maximum Liklihood
 
 \hstop

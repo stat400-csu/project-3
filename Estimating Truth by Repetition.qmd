@@ -17,6 +17,14 @@ editor: visual
 
     -   minimum of 10 is standard
 
+## Research Questions
+
+-   What effect does EPV have on out-of-sample prediction for logistic regression?
+
+-   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
+
+-   Beyond the results of the paper: What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
+
 ## Simulation Study
 
 -   created more than 4,000 different combinations and over 12,000,000 datasets
@@ -29,13 +37,21 @@ editor: visual
 
 ## Our Implementation
 
-### Questions
+-   Variables for consideration
 
--   What effect does EPV have on out-of-sample prediction for logistic regression?
+    -   EPV: 5, 10, 50
 
--   What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
+    -   Number of predictors: 4, 8, 12
 
--   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
+    -   Distribution of predictors: MVN(0), MVN(0.5)
+
+    -   Predictor effects: all equal, one strong, one noise, half noise
+
+-   Predictors normally distributed
+
+-   Training data set has $N = \frac{EPV * P}{Pr(Y = 1)}$ data points
+
+-   Testing dataset has $N^* = \frac{5000}{Pr(Y = 1)}$ data points
 
 ## Maximum Likelihood
 

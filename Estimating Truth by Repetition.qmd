@@ -5,70 +5,48 @@ format: revealjs
 editor: visual
 ---
 
-## Research Study 
+## Sample Size for Binary Logistic Prediction Models: Beyond events per variable criteria
 
-<br>
+-   clinical simulation studies for binary outcomes
 
-Sample size for binary logistic prediction models: beyond events per variable criteria, Maarten et. al
+    -   want accurate predictions on new data
 
-*Statistical Methods in Medical Research*
+-   *Events Per Variable* (EPV), the ratio of the number of events in the smaller class to the number of degrees of freedom
 
-## Abstract
+    -   think signal to noise
 
-<br>
+    -   minimum of 10 is standard
 
-Logistic regression is often used in clinical settings.
+## Simulation Study
 
--   Long-held standard is to use EPV (events per variable) ≥ 10 to decide minimum sample size & maximum number of predictors to use in a study.
+-   created more than 4,000 different combinations and over 12,000,000 datasets
 
--   Events per variable is a ratio of the number of events / number of predictors.
+    -   different combinations of EPV, event ratios, number and distribution of predictors, AUC, and predictor effects
 
-Simulation study:
+-   7 different models
 
--   studies the influence of EPV, the events fraction, & the number of possible predictors
+    -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
 
--   predictive performance of correlations, distributions of possible predictor variables, & predictor effects on new simulated sample data are compared
+## Our Implementation
 
-Comparison methods:
+### Questions
 
--   rMPSE
+-   What effect does EPV have on out-of-sample prediction for logistic regression?
 
--   calibration slope
+-   What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
 
--   AUC
-
-Outcome:
-
--   research study indicates that EPV does not have a strong relation with the metrics of predictive performance
-
--   suggest using 3 factors instead: number of predictors, total sample size, & the events fraction (a ratio of positive outcomes over the total outcomes)
+-   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
 
 ## Maximum Likelihood
 
-<br>
-
 ## Ridge Logistic Regression
-
-<br>
 
 ## Random Forest
 
-<br>
-
 ## Maximum Likelihood vs. Ridge
-
-<br>
 
 ## Random Forest vs. MLE & Ridge
 
-<br>
-
-## Results
-
-<br>
-
 ## Conclusion
-
-<br>
 
 ## 

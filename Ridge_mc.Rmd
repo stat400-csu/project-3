@@ -59,6 +59,7 @@ fit_logistic_ridge <- function(dat) {
 
 ```{r evaluate ridge model}
 # ridge-specific evaluate model
+# evaluating AUC and brier scores
 
 evaluate_ridge_model <- function(cvfit, dat) {
   X <- as.matrix(dat[ , -1])

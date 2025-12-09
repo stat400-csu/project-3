@@ -36,7 +36,7 @@ van Smeden, M., Moons, K. G. M., de Groot, J. A. H., Collins, G. S., Altman, D. 
 
 \hstart
 
-#### Abstract:
+#### Abstract and Introduction:
 
 Logistic regression is often used in clinical settings with a long-held standard is to use EPV (events per variable) ≥ 10 in order to decide on the minimal sample size and the maximum number of predictors to make the study stable. Events per variable is a ratio of the number of events / number of predictors. Having too small of a sample size or too large of a number of predictors the study can become unreliable.
 
@@ -44,18 +44,56 @@ A simulation study is presented that studies the influence of EPV, the events fr
 
 The studies results indicate that EPV does not have a strong relation with the metrics of predictive performance. They suggest that predictive performance can be better approximated by considering 3 factors instead: the number of predictors, total sample size, and the events fraction (a ratio of positive outcomes over the total outcomes).
 
+Arguments are that EPV = 10 is either too lenient or too strict with shrinkage models such as ridge and lasso, and that EPV doesn't reliably predict how well a model performs on new data. There is a gap in alternatives.
 
-\hstop
+Goals of the research are to investigate what characteristics of a dataset actually do affect the testing sample data predictive performance in logistic regression.
 
-\hstart
+Simulation Study:
+Use a large Monte Carlo simulation and vary:
+- EPV
+- event fraction
+- number of predictors
+- predictor distributions
+- effect sizes
+- true model AUC
 
-#### 1. Introduction
+Models:
+- Maximum Likelihood
+- Backward selection
+- Firth penalized likelihood
+- Heuristic shrinkage
+- Ridge regression
+- LASSO regression
+
+Variations:
+- EPV
+- events fraction
+- number of candidate predictors
+- type of predictor variable effects
 
 \hstop
 
 \hstart
 
 #### 2. Developing a prediction model using logistic regression
+
+#### a. Logistic Regression simulation
+
+Synthetic datasets of known truth:
+- Logistic regression model generates the probabilities
+- Bernoulli generates the binary outcomes
+
+#### b. Ridge Logistic Regression
+
+- adds a penalty L2 to the loss function which shrinks the coefficients towards zero so they are less extreme
+- purpose: stabilizes the model when predictors are correlated or when the dataset is small relative to the number of predictors
+- reduces variance without adding too much bias -> keeps the variance/bias ratio in check
+
+Predictive Performance 
+
+- ridge is trained on synthetic data A
+- ridge is tested on synthetic data B
+- repeat
 
 \hstop
 

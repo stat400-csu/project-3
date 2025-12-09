@@ -7,7 +7,25 @@ editor: visual
 
 ## Sample Size for Binary Logistic Prediction Models: Beyond events per variable criteria
 
-Research paper
+-   clinical simulation studies for binary outcomes
+
+    -   want accurate predictions on new data
+
+-   *Events Per Variable* (EPV), the ratio of the number of events in the smaller class to the number of degrees of freedom
+
+    -   think signal to noise
+
+    -   minimum of 10 is standard
+
+## Simulation Study
+
+-   created more than 4,000 different combinations and over 12,000,000 datasets
+
+    -   different combinations of EPV, event ratios, number and distribution of predictors, AUC, and predictor effects
+
+-   7 different models
+
+    -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
 
 ## Maximum Likelihood
 

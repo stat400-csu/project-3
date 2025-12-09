@@ -95,12 +95,12 @@ ridge_summary
 ```
 
 ```{r}
-# Monte Carlo simulation settings
+# Monte Carlo simulation settings (subset of Van Calster et al. design)
 
-EPV_vals <- c(5, 10, 50)         # subset -> research study uses 7 values
-event_frac_vals <- c(1/2, 1/8)   # subset -> research study uses 4 fractions
-P_vals <- c(4, 8, 12)            # same p-vals as study
-rho_vals <- c(0, 0.3, 0.5)       # same continuous predictors
+EPV_vals <- c(5, 10, 50)    # subset -> research study uses 7 values
+event_frac <- 0.5           # subset -> research study uses 4 fractions
+P_vals <- c(4, 8, 12)       # same p-vals as study
+rho_vals <- c(0, 0.5)       # same continuous predictors
 beta_patterns <- c("equal", "strong", "noise", "halfnoise")   # same beta patterns
 
 B <- 10  # number of Monte Carlo repetitions per condition
@@ -117,44 +117,43 @@ ridge_results <- list()
 iter <- 1
 
 for (EPV in EPV_vals) {
-  for (event_frac in event_frac_vals) {
-    for (P in P_vals) {
-      for (rho in rho_vals) {
-        for (bp in beta_patterns) {
-          for (b in 1:B) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
           
-            # N <- hypothetical individuals
-            N <- ceiling(EPV * P / event_frac)
+          # compute sample size N from EPV formula:
+          # EPV = (N * event_frac) / P => N = EPV * P / event_frac
+          N <- ceiling(EPV * P / event_frac)
         
-            # simulate one dataset
-            dat <- simulate_logit(N = N, P = P, rho = rho, beta_pattern = bp)
+          # simulate one dataset
+          dat <- simulate_logit(N = N, P = P, rho = rho, beta_pattern = bp)
         
-            # fit ridge model
-            ridge_fit <- fit_logistic_ridge(dat)
+          # fit ridge model
+          ridge_fit <- fit_logistic_ridge(dat)
         
-            # evaluate performance on this dataset
-            ridge_summary <- evaluate_ridge_model(ridge_fit, dat)
+          # evaluate performance on this dataset
+          ridge_summary <- evaluate_ridge_model(ridge_fit, dat)
         
-            # store results
-            ridge_results[[iter]] <- tibble(
-              method = "ridge",
-              sim = b, 
-              P = P, 
-              rho = rho,
-              beta_pattern = bp,
-              AUC = ridge_summary$AUC,
-              Brier = ridge_summary$Brier,
-              lambda = ridge_summary$lambda
-            )
-            iter <- iter + 1
-          }
-      
+          # store results
+          ridge_results[[iter]] <- tibble(
+            method = "ridge",
+            EPV = EPV,
+            sim = b, 
+            P = P, 
+            rho = rho,
+            beta_pattern = bp,
+            AUC = ridge_summary$AUC,
+            Brier = ridge_summary$Brier,
+            lambda = ridge_summary$lambda
+          )
+          iter <- iter + 1
         }
-    
+      
       }
-  
-    }
     
+    }
+  
   }
   
 }
@@ -170,7 +169,7 @@ head(ridge_results_df)
 # matching the research paper summary stats
 
 ridge_condition_summary <- ridge_results_df |>
-  group_by(P, rho, beta_pattern) |>
+  group_by(EPV, P, rho, beta_pattern) |>
   summarise(
     n_sims = n(),
     mean_AUC = mean(AUC),
@@ -230,6 +229,15 @@ ggplot(ridge_condition_summary,
 
 ```
 
+\hstart
+
+### Calibration Plot
+For illustration purposes we show a calibration plot for a SINGLE representative scenario:
+$N = 1000, \\P = 8, \\rho = 0.5$, 
+beta pattern = $"strong"$.
+
+\hstop
+
 ```{r ridge calibration setup}
 # calibration plot - how well do the predicted values line up with the actual observed values
 
@@ -284,4 +292,10 @@ ggplot(ridge_cal_df, aes(x = pred, y = obs)) +
   )
 
 ```
+
+\hstart
+
+# Compare Ridge to MLE and Forest
+
+\hstop
 

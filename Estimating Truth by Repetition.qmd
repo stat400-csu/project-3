@@ -1,0 +1,24 @@
+---
+title: "Estimating Truth by Repetition: A Monte Carlo Simulation"
+author: "Group 3: Andi Mellyn, Jessica Reyes, Hope Winsor"
+format: revealjs
+editor: visual
+---
+
+## Sample Size for Binary Logistic Prediction Models: Beyond events per variable criteria
+
+Research paper
+
+## Maximum Likelihood
+
+## Ridge Logistic Regression
+
+## Random Forest
+
+## Maximum Likelihood vs. Ridge
+
+## Random Forest vs. MLE & Ridge
+
+## Conclusion
+
+## 

@@ -47,3 +47,8 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Quarto / R Markdown outputs
+*.html
+*_files/
+*.pdf

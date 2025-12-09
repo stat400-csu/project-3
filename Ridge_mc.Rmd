@@ -3,8 +3,8 @@ title: "MC - Ridge Regression"
 author: "Andi Mellyn"
 date: "2025-12-01"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 \colorlet{shadecolor}{gray!10}
@@ -94,7 +94,7 @@ ridge_summary
 
 ```
 
-```{r}
+```{r Monte Carlo simulation}
 # Monte Carlo simulation settings (subset of Van Calster et al. design)
 
 EPV_vals <- c(5, 10, 50)    # subset -> research study uses 7 values
@@ -105,9 +105,7 @@ beta_patterns <- c("equal", "strong", "noise", "halfnoise")   # same beta patter
 
 B <- 10  # number of Monte Carlo repetitions per condition
 
-```
 
-```{r Monte Carlo simulation}
 # Monte Carlo loop for ridge regression
 
 set.seed(400)

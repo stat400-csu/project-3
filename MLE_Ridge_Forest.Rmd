@@ -31,14 +31,14 @@ We compare the three modeling approaches under the same Monte Carlo simulation d
 ```{r}
 # loading Monte Carlo results datasets
 
-mle_df <- readRDS("results_files/mle_mc_results.rds")
-# ridge_df <- readRDS("results_files/ridge_mc_results.rds")
+mle_df <- read.csv("MLE_Simulation.csv")
+ridge_df <- read.csv("results_files/ridge_mc_testing_results.csv")
 
 ```
 
 ```{r}
 # creating a master table
-all_results <- bind_rows(mle_df)
+all_results <- bind_rows(mle_df, ridge_df)
 head(all_results)
 
 ```

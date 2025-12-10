@@ -124,15 +124,22 @@ for (EPV in EPV_vals) {
           # compute sample size N from EPV formula:
           # EPV = (N * event_frac) / P => N = EPV * P / event_frac
           N <- ceiling(EPV * P / event_frac)
+          
+          ## NEW FOR TESTING
+          N_star <- ceiling(5000 / event_frac)
+          
+          # NEW FOR TESTING: SIMULATE TRAINING & TESTING DATA
+          df_train <- simulate_logit(N = N,      P = P, rho = rho, beta_pattern = bp)
+          df_test  <- simulate_logit(N = N_star, P = P, rho = rho, beta_pattern = bp)
         
-          # simulate one dataset
-          dat <- simulate_logit(N = N, P = P, rho = rho, beta_pattern = bp)
+          # simulate one dataset -> USED ON TRAINING
+         #  dat <- simulate_logit(N = N, P = P, rho = rho, beta_pattern = bp)
         
-          # fit ridge model
-          ridge_fit <- fit_logistic_ridge(dat)
+          # fit ridge model -> NEW fit on df_train
+          ridge_fit <- fit_logistic_ridge(df_train)
         
           # evaluate performance on this dataset
-          ridge_summary <- evaluate_ridge_model(ridge_fit, dat)
+          ridge_summary <- evaluate_ridge_model(ridge_fit, df_test)
         
           # store results
           ridge_results[[iter]] <- tibble(
@@ -158,8 +165,8 @@ for (EPV in EPV_vals) {
 }
 
 
-ridge_results_df <- bind_rows(ridge_results)
-head(ridge_results_df)
+ridge_results_testing_df <- bind_rows(ridge_results)
+head(ridge_results_testing_df)
 
 ```
 
@@ -296,8 +303,8 @@ ggplot(ridge_cal_df, aes(x = pred, y = obs)) +
 # saving the monte carlo simulation results for comparisons
 
 if (!dir.exists("results_files")) dir.create("results_files")
-saveRDS(ridge_results_df, file = "results_files/ridge_mc_results.rds")
-#write.csv(ridge_results_df, file = "results_files/ridge_mc_results.csv", row.names = FALSE)
+#saveRDS(ridge_results_df, file = "results_files/ridge_mc_results.rds")
+write.csv(ridge_results_testing_df, file = "results_files/ridge_mc_testing_results.csv", row.names = FALSE)
 ```
 
 

@@ -46,12 +46,15 @@ simulate_logit <- function(N, P, rho, beta_pattern) {
 
 # fit model on train data
 ```{r}
+
 fit_rf_model <- function(dat) {
+  # remove pi
+  train_set <- dat |> subset(select = -pi)
   rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
   set_engine("randomForest", importance = TRUE) |>
   set_mode("classification")
 
-  rf_fit <- rf_spec |> fit(y ~ ., data = dat)
+  rf_fit <- rf_spec |> fit(y ~ ., data = train_set)
   rf_fit
 }
 
@@ -75,7 +78,7 @@ fit_logistic_ridge <- function(dat) {
 }
 
 fit_logistic_mle <- function(dat) {
-  glm(y ~ ., data = dat, family = binomial)
+  glm(y ~ ., data = dat |> subset(select = -pi), family = binomial)
 }
 ```
 
@@ -89,6 +92,7 @@ fit_logistic_mle <- function(dat) {
 - mean absolute prediction error
 
 ```{r}
+
 evaluate_rf_model <- function(fit, dat) {
   probs <- fit |> augment(new_data = dat) |> pull(.pred_1)
   
@@ -97,7 +101,7 @@ evaluate_rf_model <- function(fit, dat) {
   # mae for prediction
   MAPE <- mae(dat$pi, probs)
   # brier
-  brier <- mean((y - probs)^2)
+  brier <- mean((as.numeric(dat$y) - probs)^2)
   
   tibble(
     rMPSE = rMPSE,
@@ -105,7 +109,6 @@ evaluate_rf_model <- function(fit, dat) {
     Brier = brier # brier: measure of the accuracy of probabilistic predictions
   )
 }
-
 
 evaluate_ridge_model <- function(cvfit, dat) {
   X <- as.matrix(dat |> subset(select = -c(y, pi)))
@@ -119,7 +122,7 @@ evaluate_ridge_model <- function(cvfit, dat) {
   # mae for prediction
   MAPE <- mae(dat$pi, probs)
   # brier
-  brier <- mean((y - probs)^2)
+  brier <- mean((as.numeric(y) - probs)^2)
   
   tibble(
     rMPSE = rMPSE,
@@ -129,14 +132,14 @@ evaluate_ridge_model <- function(cvfit, dat) {
 }
 
 evaluate_mle_model <- function(fit, dat) {
-  probs <- predict(fit, type = "response")
+  probs <- fit |> predict(newdata = dat, type = "response")
   
   # rmse for prediction
   rMPSE <- rmse(dat$pi, probs)
   # mae for prediction
   MAPE <- mae(dat$pi, probs)
   # brier
-  brier <- mean((y - probs)^2)
+  brier <- mean((as.numeric(dat$y) - probs)^2)
   
   tibble(
     rMPSE = rMPSE,
@@ -149,10 +152,10 @@ evaluate_mle_model <- function(fit, dat) {
 # try on one first
 ```{r}
   # generate data 
-  EPV <- 50
+  EPV <- 5
   event_frac <- 0.5
-  P <- 12
-  rho <- 0.5
+  P <- 4
+  rho <- 0
   bp <- "equal"
   
   # time model fit
@@ -168,9 +171,13 @@ evaluate_mle_model <- function(fit, dat) {
   
   # fit model
   rf <- fit_rf_model(df_train)
+  ridge <- fit_logistic_ridge(df_train)
+  mle <- fit_logistic_mle(df_train)
   
   # evaluate model
-  results <- evaluate_rf_model(rf, df_test)
+  results_rf <- evaluate_rf_model(rf, df_test)
+  results_ridge <- evaluate_ridge_model(ridge, df_test)
+  results_mle <- evaluate_mle_model(mle, df_test)
   
   end <-  Sys.time()
   end - start
@@ -232,9 +239,124 @@ for (EPV in EPV_vals) {
 
 ```{r}
 save_results$model <- "Random Forest"
+
+write.csv(save_results, "simulations_rmse_mae/random_forest_simulation_extra_values.csv", row.names = F)
+```
+
+# ridge
+```{r}
+set.seed(400)
+
+EPV_vals <- c(5, 10, 50)
+event_frac <- 0.5
+
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+B <- 10  # number of Monte Carlo repetitions
+
+save_results <- data.frame()
+
+for (EPV in EPV_vals) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
+          
+          # Determine total sample size
+          N <- ceiling((EPV * P) / event_frac)
+          N_star <- ceiling(5000/event_frac)
+          
+          # Simulate dataset
+          df_train <- simulate_logit(N, P, rho, bp)
+          df_test <- simulate_logit(N_star, P, rho, bp)
+          
+          # fit ridge
+          fit <- fit_logistic_ridge(dat = df_train)
+          
+          # evaluate random forest
+          eval_rf <- evaluate_ridge_model(fit, df_test)
+          
+          ### Store combined ###
+          combined <- eval_rf %>%
+            mutate(
+              EPV = EPV,
+              P = P,
+              rho = rho,
+              beta_pattern = bp,
+              sim = b
+            )
+          save_results <- rbind(save_results, combined)
+        }
+      }
+    }
+  }
+}
+```
+
+```{r}
+save_results$model <- "Ridge"
+
+write.csv(save_results, "simulations_rmse_mae/ridge_simulation_extra_values.csv", row.names = F)
+```
+
+```{r}
+set.seed(400)
+
+EPV_vals <- c(5, 10, 50)
+event_frac <- 0.5
+
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+B <- 10  # number of Monte Carlo repetitions
+
+save_results <- data.frame()
+
+for (EPV in EPV_vals) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
+          
+          # Determine total sample size
+          N <- ceiling((EPV * P) / event_frac)
+          N_star <- ceiling(5000/event_frac)
+          
+          # Simulate dataset
+          df_train <- simulate_logit(N, P, rho, bp)
+          df_test <- simulate_logit(N_star, P, rho, bp)
+          
+          # fit random forest
+          fit <- fit_logistic_mle(df_train)
+          
+          # evaluate random forest
+          eval_rf <- evaluate_mle_model(fit, df_test)
+          
+          ### Store combined ###
+          combined <- eval_rf %>%
+            mutate(
+              EPV = EPV,
+              P = P,
+              rho = rho,
+              beta_pattern = bp,
+              sim = b
+            )
+          save_results <- rbind(save_results, combined)
+        }
+      }
+    }
+  }
+}
+```
+
+```{r}
+save_results$model <- "MLE"
 save_results$lambda <- NA
 
-write.csv(save_results, "RandomForest_Simulation.csv", row.names = F)
+write.csv(save_results, "simulations_rmse_mae/mle_simulation_extra_values.csv", row.names = F)
 ```
 
 

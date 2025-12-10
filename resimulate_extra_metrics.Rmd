@@ -93,7 +93,6 @@ fit_logistic_mle <- function(dat) {
 - mean absolute prediction error
 
 ```{r}
-
 evaluate_rf_model <- function(fit, dat) {
   probs <- fit |> augment(new_data = dat) |> pull(.pred_1)
   

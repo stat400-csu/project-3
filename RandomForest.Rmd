@@ -46,7 +46,7 @@ simulate_logit <- function(N, P, rho, beta_pattern) {
 
 # fit model on train data
 ```{r}
-fit_rf <- function(dat) {
+fit_rf_model <- function(dat) {
   rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
   set_engine("randomForest", importance = TRUE) |>
   set_mode("classification")
@@ -66,14 +66,13 @@ fit_rf <- function(dat) {
 - mean absolute prediction error
 
 ```{r}
-evaluate_mle_model <- function(fit, dat) {
-  probs <- augment(rf, new_data = dat) %>% pull(.pred_class)
-  rmse(as.numeric(dat$y), as.numeric(probs))
+evaluate_rf_model <- function(fit, dat) {
+  probs <- augment(rf, new_data = dat) %>% pull(.pred_1)
   
   auc_val <- auc(as.numeric(dat$y), as.numeric(probs))
   brier <- mean((as.numeric(dat$y) - as.numeric(probs))^2)
   
-  tibble(AUC = as.numeric(auc_val), Brier = brier, lambda = NA)
+  tibble(AUC = as.numeric(auc_val), Brier = brier)
 }
 ```
 
@@ -98,10 +97,10 @@ evaluate_mle_model <- function(fit, dat) {
   df_test <- simulate_logit(N_star, P, rho, bp)
   
   # fit model
-  rf <- fit_rf(df_train)
+  rf <- fit_rf_model(df_train)
   
   # evaluate model
-  results <- evaluate_mle_model(rf, df_test)
+  results <- evaluate_rf_model(rf, df_test)
   
   end <-  Sys.time()
   end - start
@@ -122,8 +121,7 @@ beta_patterns <- c("equal", "strong", "noise", "halfnoise")
 
 B <- 10  # number of Monte Carlo repetitions
 
-all_results <- list()
-iter <- 1
+save_results <- data.frame()
 
 for (EPV in EPV_vals) {
   for (P in P_vals) {
@@ -140,11 +138,10 @@ for (EPV in EPV_vals) {
           df_test <- simulate_logit(N_star, P, rho, bp)
           
           # fit random forest
-          fit_rf <- fit_logistic_mle(df_train)
+          fit <- fit_rf_model(df_train)
           
           # evaluate random forest
-          eval_rf <- evaluate_rf_model(fit_rf, df_test)
-          eval_rf$model <- "Random Forest"
+          eval_rf <- evaluate_rf_model(fit, df_test)
           
           ### Store combined ###
           combined <- eval_rf %>%
@@ -155,9 +152,7 @@ for (EPV in EPV_vals) {
               beta_pattern = bp,
               sim = b
             )
-          
-          all_results[[iter]] <- combined
-          iter <- iter + 1
+          save_results <- rbind(save_results, combined)
         }
       }
     }

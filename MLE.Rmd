@@ -1,5 +1,5 @@
 ---
-title: "MC_2"
+title: "MLE"
 output:
   pdf_document: default
   html_document: default

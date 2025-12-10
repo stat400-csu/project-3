@@ -33,12 +33,13 @@ We compare the three modeling approaches under the same Monte Carlo simulation d
 
 mle_df <- read.csv("MLE_Simulation.csv")
 ridge_df <- read.csv("results_files/ridge_mc_testing_results.csv")
+rf_df <- read.csv("RandomForest_Simulation.csv")
 
 ```
 
 ```{r}
 # creating a master table
-all_results <- bind_rows(mle_df, ridge_df)
+all_results <- bind_rows(mle_df, rf_df)
 head(all_results)
 
 ```
@@ -112,4 +113,27 @@ ggplot(mean_results, aes(x = factor(P), y = factor(EPV), fill = mean_Brier)) +
   )
 
 ```
+
+```{r}
+ridge_extra <- read.csv("simulations_rmse_mae/ridge_simulation_extra_values.csv")
+mle_extra <- read.csv("simulations_rmse_mae/mle_simulation_extra_values.csv")
+rf_extra <- read.csv("simulations_rmse_mae/random_forest_simulation_extra_values.csv")
+rf_extra$model <- "Random Forest"
+
+combined_metrics <- rbind(ridge_extra, mle_extra)
+combined_metrics <- rbind(combined_metrics, rf_extra)
+```
+
+```{r}
+fig3 <- combined_metrics |> pivot_longer(cols = c(rMPSE, MAPE, Brier), names_to = "measure",
+                                         values_to = "value") |>
+  mutate(measure = factor(measure, level = c("rMPSE", "MAPE", "Brier")),
+         model = factor(model, level = c("Ridge", "MLE", "Random Forest")))
+levels(fig3$model) <- c("Ridge", "ML", "Random Forest")
+str(fig3)
+ggplot(fig3) + 
+  geom_boxplot(aes(x = model, y = value)) + 
+  facet_wrap(measure ~ EPV) 
+```
+
 

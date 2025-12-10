@@ -38,7 +38,7 @@ simulate_logit <- function(N, P, rho, beta_pattern) {
   
   eta <- X %*% beta
   pi  <- 1/(1 + exp(-eta))
-  y <- as.factor(rbinom(N, 1, pi))
+  y <- rbinom(N, 1, pi)
   
   data.frame(y = y, pi = pi, X)
 }
@@ -49,7 +49,8 @@ simulate_logit <- function(N, P, rho, beta_pattern) {
 
 fit_rf_model <- function(dat) {
   # remove pi
-  train_set <- dat |> subset(select = -pi)
+  train_set <- dat |> subset(select = -pi) |> 
+    mutate(y = as.factor(y))
   rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
   set_engine("randomForest", importance = TRUE) |>
   set_mode("classification")
@@ -101,7 +102,7 @@ evaluate_rf_model <- function(fit, dat) {
   # mae for prediction
   MAPE <- mae(dat$pi, probs)
   # brier
-  brier <- mean((as.numeric(dat$y) - probs)^2)
+  brier <- mean((dat$y - probs)^2)
   
   tibble(
     rMPSE = rMPSE,
@@ -122,7 +123,7 @@ evaluate_ridge_model <- function(cvfit, dat) {
   # mae for prediction
   MAPE <- mae(dat$pi, probs)
   # brier
-  brier <- mean((as.numeric(y) - probs)^2)
+  brier <- mean((y - probs)^2)
   
   tibble(
     rMPSE = rMPSE,
@@ -139,7 +140,7 @@ evaluate_mle_model <- function(fit, dat) {
   # mae for prediction
   MAPE <- mae(dat$pi, probs)
   # brier
-  brier <- mean((as.numeric(dat$y) - probs)^2)
+  brier <- mean((dat$y - probs)^2)
   
   tibble(
     rMPSE = rMPSE,
@@ -354,7 +355,6 @@ for (EPV in EPV_vals) {
 
 ```{r}
 save_results$model <- "MLE"
-save_results$lambda <- NA
 
 write.csv(save_results, "simulations_rmse_mae/mle_simulation_extra_values.csv", row.names = F)
 ```

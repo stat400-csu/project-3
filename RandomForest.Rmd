@@ -51,8 +51,8 @@ fit_rf_model <- function(dat) {
   set_engine("randomForest", importance = TRUE) |>
   set_mode("classification")
 
-  rf_fit <- rf_spec |>
-  fit(y ~ ., data = dat)
+  rf_fit <- rf_spec |> fit(y ~ ., data = dat)
+  rf_fit
 }
 ```
 
@@ -67,7 +67,7 @@ fit_rf_model <- function(dat) {
 
 ```{r}
 evaluate_rf_model <- function(fit, dat) {
-  probs <- augment(rf, new_data = dat) %>% pull(.pred_1)
+  probs <- fit |> augment(new_data = dat) |> pull(.pred_1)
   
   auc_val <- auc(as.numeric(dat$y), as.numeric(probs))
   brier <- mean((as.numeric(dat$y) - as.numeric(probs))^2)
@@ -159,4 +159,12 @@ for (EPV in EPV_vals) {
   }
 }
 ```
+
+```{r}
+save_results$model <- "Random Forest"
+save_results$lambda <- NA
+
+write.csv(save_results, "RandomForest_Simulation.csv", row.names = F)
+```
+
 

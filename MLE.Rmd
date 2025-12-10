@@ -1,5 +1,5 @@
 ---
-title: "MC_2"
+title: "MLE"
 output:
   pdf_document: default
   html_document: default
@@ -74,9 +74,8 @@ model_assessment_function <- function(model, test_data) {
 
 
 ```{r echo=FALSE, results='hide', include=FALSE, message=FALSE, warning=FALSE}
-# Simulation Loop
-
 set.seed(400)
+# Simulation loop
 
 EPV_vals <- c(5, 10, 50)
 event_frac <- 0.5    
@@ -96,26 +95,28 @@ for (EPV in EPV_vals) {
       for (bp in beta_patterns) {
         for (b in 1:B) {
           
-          # Determine sample size
-          N <- ceiling((EPV * P) / event_frac)
+          # Determine sample sizes 
+          N  <- ceiling((EPV * P) / event_frac)
+          N_star <- ceiling(5000 / event_frac)   
           
-          # Generate full dataset
-          full_data <- data_simulation_function(N, P, rho, bp)
+          # Training data 
+          train_data <- data_simulation_function(N, P, rho, bp)
           
-          # Train-test split 70 | 30
-          train_index <- sample(1:N, size = floor(0.7 * N))
-          train_data <- full_data[train_index, ]
-          test_data  <- full_data[-train_index, ]
+          # Test data
+          test_data  <- data_simulation_function(N_star, P, rho, bp)
           
-          # Fit Model
-          model <- model_fitting_function(train_data)
+          # fit model
+          fit_model <- model_fitting_function(train_data)
           
-          #Assess model using test
-          metrics <- model_assessment_function(model, test_data)
+          # evaluate model
+          metrics <- model_assessment_function(fit_model, test_data)
           
-          # Add metadata
+          metrics$model <- "MLE"  
+          
+          # metadata
           metrics <- metrics %>%
             mutate(
+              model = "MLE",
               EPV = EPV,
               P = P,
               rho = rho,
@@ -123,6 +124,7 @@ for (EPV in EPV_vals) {
               sim = b
             )
           
+          # results
           results_list[[iter]] <- metrics
           iter <- iter + 1
         }
@@ -130,9 +132,8 @@ for (EPV in EPV_vals) {
     }
   }
 }
-results_df <- bind_rows(results_list)
 
-# save results to csv
+results_df <- dplyr::bind_rows(results_list)
 write.csv(results_df, "MLE_Simulation.csv", row.names = FALSE)
 ```
 

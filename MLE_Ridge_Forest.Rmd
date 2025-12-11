@@ -133,12 +133,7 @@ fig2 <- combined_metrics |> pivot_longer(cols = c(rMPSE, MAPE, Brier),
   mutate(measure = factor(measure, level = c("rMPSE", "MAPE", "Brier")),
          model = factor(model, level = c("Ridge", "ML", "Random Forest")))
 
-<<<<<<< HEAD
-
-ggplot(combined_long) + 
-=======
 ggplot(fig3) + 
->>>>>>> refs/remotes/origin/main
   geom_boxplot(aes(x = model, y = value)) + 
   facet_wrap(measure ~ EPV) 
 

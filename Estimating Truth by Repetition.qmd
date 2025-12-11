@@ -33,18 +33,11 @@ theme: sky
 -   EPV has shown to be either too lenient or too strict depending on the modeling strategy & does not strongly relate to prediction accuracy
 
 ## Simulation Study
+created more than 4,000 different combinations and over 12,000,000 datasets
 
--   created more than 4,000 different combinations and over 12,000,000 datasets
-
-    -   different combinations of EPV, event ratios, number and distribution of predictors, AUC, and predictor effects
-
--   7 different models
-
-    -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
-
--   6 predictive performance metrics
-
-    -   rMPSE, MAPE, calibration slope, average calibration in large, $\Delta$AUC, Brier
+-   different combinations of EPV, event ratios, AUC, and #, distribution, effect of predictors
+-   7 different models: Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
+-   6 predictive performance metrics: rMPSE, MAPE, calibration slope, average calibration in large, $\Delta$AUC, Brier
 
 ## Our Implementation
 
@@ -62,7 +55,7 @@ theme: sky
 
 $3 \times 3 \times 2 \times 4$ factor study resulting in 72 distinct combinations simulated 10 times each
 
--   EPV (5, 10, 50), number of candidate predictors (P) (4, 8, 12), distribution of predictors (MVN(0), MVN(0.5)), beta patterns: (equal effect,1 strong, 1 noise, 1/2 noise)
+-   EPV (5, 10, 50), number of predictors (P) (4, 8, 12), distribution of predictors (MVN(0), MVN(0.5)), beta patterns: (equal effect, 1 strong, 1 noise, 1/2 noise)
 
 -   predictive performance metrics: rMPSE, MAE, Brier
 
@@ -457,6 +450,7 @@ summary_df <- results_df %>%
   )
 
 knitr::kable(summary_df, digits = 3)
+```
 ## Random Forest vs. MLE & Ridge
 
 ::::: columns
@@ -548,6 +542,8 @@ ggplot(summary_df,
   ) +
   theme_minimal(base_size = 14)
 ```
+:::
+::::
 
 ## Main Findings
 
@@ -570,18 +566,6 @@ ggplot(summary_df,
 -   minimal shrinkage at high EPV
 -   $\rightarrow$ Ridge regression is advantageous when EPV is low or when predictors contain noise or are correlated. When EPV is sufficiently high $(\ge50)$, both methods perform equivalently.
 
-```{r}
-
-```
-
-## Random Forest vs. MLE & Ridge
-
-```{r}
-
-```
-
-:::
-::::
 ## Conclusion
 
 ::: smallest

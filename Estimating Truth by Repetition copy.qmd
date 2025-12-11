@@ -27,14 +27,11 @@ theme: sky
 -   Beyond the results of the paper: What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
 
 ## Simulation Study
+created more than 4,000 different combinations and over 12,000,000 datasets
 
--   created more than 4,000 different combinations and over 12,000,000 datasets
-
-    -   different combinations of EPV, event ratios, number and distribution of predictors, AUC, and predictor effects
-
--   7 different models
-
-    -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
+-   different combinations of EPV, event ratios, AUC, and #, distribution, effect of predictors
+-   7 different models: Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
+-   6 predictive performance metrics: rMPSE, MAPE, calibration slope, average calibration in large, $\Delta$AUC, Brier
 
 ## Our Implementation
 
@@ -482,10 +479,11 @@ ggplot(summary_df,
 
 3.  At EPV=50, MLE and Ridge are almost identical, because shrinkage is no longer needed.
 
+## Main Findings
 4.  Ridge's adaptive penalty $(\lambda)$ adjusts appropriately:
 
 -   strong shrinkage at low EPV
--   minimal shrinkage at high EPV
+- minimal shrinkage at high EPV
 -   $\rightarrow$ Ridge regression is advantageous when EPV is low or when predictors contain noise or are correlated. When EPV is sufficiently high $(\ge50)$, both methods perform equivalently.
 
 ## Random Forest vs. MLE & Ridge

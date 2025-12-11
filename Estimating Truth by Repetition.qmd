@@ -5,25 +5,31 @@ format: revealjs
 editor: visual
 ---
 
-## Sample Size for Binary Logistic Prediction Models: Beyond events per variable criteria
+## Research Study
 
--   clinical simulation studies for binary outcomes
+<br>
+
+"Sample size for binary logistic prediction models: beyond events per variable criteria", Maarten et. al
+
+*Statistical Methods in Medical Research*
+
+-   analyzing out-of-sample accuracy in logistic regression
+
+    -   Clinical simulation studies for outcomes like positive/negative for a disease
 
     -   want accurate predictions on new data
 
--   *Events Per Variable* (EPV), the ratio of the number of events in the smaller class to the number of degrees of freedom
+## Events Per Variable
 
-    -   think signal to noise
+*Events Per Variable* (EPV), a ratio of the number of events to the number of degrees of freedom
 
-    -   minimum of 10 is standard
+-   think signal to noise
 
-## Research Questions
+-   used to decide the minimum sample size & maximum number of predictors to use in a study
 
--   What effect does EPV have on out-of-sample prediction for logistic regression?
+-   standard is EPV ≥ 10
 
--   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
-
--   Beyond the results of the paper: What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
+-   EPV has shown to be either too lenient or too strict depending on the modeling strategy & does not strongly relate to prediction accuracy
 
 ## Simulation Study
 
@@ -35,19 +41,29 @@ editor: visual
 
     -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
 
+-   6 predictive performance metrics
+
+    -   rMPSE, MAPE, calibration slope, average calibration in large, $\Delta$AUC, Brier
+
 ## Our Implementation
 
--   Variables for consideration
+### Questions
 
-    -   EPV: 5, 10, 50
+-   What effect does EPV have on out-of-sample prediction for logistic regression?
 
-    -   Number of predictors: 4, 8, 12
+-   What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
 
-    -   Distribution of predictors: MVN(0), MVN(0.5)
+-   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
 
-    -   Predictor effects: all equal, one strong, one noise, half noise
+## Our Implementation
 
--   Predictors normally distributed
+### Variation in Monte Carlo Study: Subset of original study
+
+$3 \times 3 \times 2 \times 4$ factor study resulting in 72 distinct combinations simulated 10 times each
+
+-   EPV (5, 10, 50), number of candidate predictors (P) (4, 8, 12), distribution of predictors (MVN(0), MVN(0.5)), beta patterns: (equal effect,1 strong, 1 noise, 1/2 noise)
+
+-   predictive performance metrics: rMPSE, MAE, Brier
 
 -   Training data set has $N = \frac{EPV * P}{Pr(Y = 1)}$ data points
 
@@ -62,10 +78,10 @@ editor: visual
 ## Maximum Likelihood vs. Ridge
 
 ## Random Forest vs. MLE & Ridge
+
 ```{r}
 
 ```
-
 
 ## Conclusion
 

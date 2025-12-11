@@ -6,31 +6,25 @@ editor: visual
 theme: sky
 ---
 
-## Research Study
+## Sample Size for Binary Logistic Prediction Models: Beyond events per variable criteria
 
-<br>
-
-"Sample size for binary logistic prediction models: beyond events per variable criteria", Maarten et. al
-
-*Statistical Methods in Medical Research*
-
--   analyzing out-of-sample accuracy in logistic regression
-
-    -   Clinical simulation studies for outcomes like positive/negative for a disease
+-   clinical simulation studies for binary outcomes
 
     -   want accurate predictions on new data
 
-## Events Per Variable
+-   *Events Per Variable* (EPV), the ratio of the number of events in the smaller class to the number of degrees of freedom
 
-*Events Per Variable* (EPV), a ratio of the number of events to the number of degrees of freedom
+    -   think signal to noise
 
--   think signal to noise
+    -   minimum of 10 is standard
 
--   used to decide the minimum sample size & maximum number of predictors to use in a study
+## Research Questions
 
--   standard is EPV ≥ 10
+-   What effect does EPV have on out-of-sample prediction for logistic regression?
 
--   EPV has shown to be either too lenient or too strict depending on the modeling strategy & does not strongly relate to prediction accuracy
+-   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
+
+-   Beyond the results of the paper: What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
 
 ## Simulation Study
 
@@ -42,29 +36,19 @@ theme: sky
 
     -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
 
--   6 predictive performance metrics
-
-    -   rMPSE, MAPE, calibration slope, average calibration in large, $\Delta$AUC, Brier
-
 ## Our Implementation
 
-#### Questions
+-   Variables for consideration
 
--   What effect does EPV have on out-of-sample prediction for logistic regression?
+    -   EPV: 5, 10, 50
 
--   What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
+    -   Number of predictors: 4, 8, 12
 
--   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
+    -   Distribution of predictors: MVN(0), MVN(0.5)
 
-## Our Implementation
+    -   Predictor effects: all equal, one strong, one noise, half noise
 
-#### Variation in Monte Carlo Study: Subset of original study
-
-$3 \times 3 \times 2 \times 4$ factor study resulting in 72 distinct combinations simulated 10 times each
-
--   EPV (5, 10, 50), number of candidate predictors (P) (4, 8, 12), distribution of predictors (MVN(0), MVN(0.5)), beta patterns: (equal effect,1 strong, 1 noise, 1/2 noise)
-
--   predictive performance metrics: rMPSE, MAE, Brier
+-   Predictors normally distributed
 
 -   Training data set has $N = \frac{EPV * P}{Pr(Y = 1)}$ data points
 
@@ -246,30 +230,29 @@ $Loss(w) = - l(w) + \lambda \sum_{j=1}^pw_j^2$
 
 ## Ridge Monte Carlo Performance
 
-:::: {.columns}
-::: {.column width="45%"}
+::::::: columns
+:::: {.column width="45%"}
 ![](ridge_brier.png){width="85%"}
 
 ::: smallest
 Brier score is lower when predictors are correlated (P = 0) showing how ridge is well suited to deal with this.
 :::
-:::
+::::
 
-::: {.column width="45%"}
+:::: {.column width="45%"}
 ![](ridge_auc.png){width="85%"}
 
 ::: smallest
-Discrimination improves with sample size and is strongest under predictor correlation (ρ = 0.5)  
-:::
+Discrimination improves with sample size and is strongest under predictor correlation (ρ = 0.5)
 :::
 ::::
+:::::::
 
 ## Ridge Calibration Plot
 
 ![](ridge_cali.png){width="100%"}
 
-Ridge shows strong overall calibration. At low predicted probabilities it tends to overestimate & between ~0.5 & 0.75 it underestimates.
-At higher probabilities, ridge shows almost perfect calibration.
+Ridge shows strong overall calibration. At low predicted probabilities it tends to overestimate & between \~0.5 & 0.75 it underestimates. At higher probabilities, ridge shows almost perfect calibration.
 
 ## Random Forest
 process: fit 500 trees and at each split, consider $\sqrt{P}$ randomly selected predictors
@@ -297,11 +280,6 @@ rf_extra <- rf_extra |>
 ggplot(rf_extra) + geom_boxplot(aes(x = Brier, color = EPV)) + facet_wrap(P ~ beta_pattern)
 ```
 on average, higher EPV improves accuracy
-
-
-```{r}
-
-```
 
 ## Maximum Likelihood vs. Ridge
 
@@ -457,8 +435,56 @@ summary_df <- results_df %>%
   )
 
 knitr::kable(summary_df, digits = 3)
-## Random Forest vs. MLE & Ridge
+```
 
+```{r}
+#| echo: false
+ggplot(summary_df,
+       aes(x = factor(P),
+           y = mean_AUC,
+           color = factor(rho),
+           group = factor(rho))) +
+  geom_point(size = 2.8) +
+  geom_line(linewidth = 0.8) +
+  geom_ribbon(aes(ymin = mean_AUC - sd_AUC,
+                  ymax = mean_AUC + sd_AUC,
+                  fill = factor(rho)),
+              alpha = 0.25,
+              color = NA) +
+  facet_grid(model ~ beta_pattern) +
+  labs(
+    title = "AUC: MLE vs Ridge",
+    x = "Number of Predictors (P)",
+    y = "Mean AUC",
+    color = "Correlation (rho)",
+    fill  = "Correlation (rho)"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+## Main Findings
+
+1.  When EPV is small (EPV=5), Ridge performs better overall than MLE, showing:
+
+-   higher or similar AUC
+-   lower Brier scores
+-   much lower variance
+-   more realistic estimates when predictors are correlated
+
+## Main Findings
+2.  At EPV=10, both methods perform comparably,
+
+-   Although, Ridge remains slightly more stable, especially in the presence of noisy predictors.
+
+3.  At EPV=50, MLE and Ridge are almost identical, because shrinkage is no longer needed.
+
+4.  Ridge's adaptive penalty $(\lambda)$ adjusts appropriately:
+
+-   strong shrinkage at low EPV
+-   minimal shrinkage at high EPV
+-   $\rightarrow$ Ridge regression is advantageous when EPV is low or when predictors contain noise or are correlated. When EPV is sufficiently high $(\ge50)$, both methods perform equivalently.
+
+## Random Forest vs. MLE & Ridge
 ::::: columns
 ::: {.column width="60%"}
 ```{r}
@@ -523,65 +549,9 @@ ggplot(fig3) +
   facet_wrap( ~ parameter, scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-
-```{r}
-#| echo: false
-ggplot(summary_df,
-       aes(x = factor(P),
-           y = mean_AUC,
-           color = factor(rho),
-           group = factor(rho))) +
-  geom_point(size = 2.8) +
-  geom_line(linewidth = 0.8) +
-  geom_ribbon(aes(ymin = mean_AUC - sd_AUC,
-                  ymax = mean_AUC + sd_AUC,
-                  fill = factor(rho)),
-              alpha = 0.25,
-              color = NA) +
-  facet_grid(model ~ beta_pattern) +
-  labs(
-    title = "AUC: MLE vs Ridge",
-    x = "Number of Predictors (P)",
-    y = "Mean AUC",
-    color = "Correlation (rho)",
-    fill  = "Correlation (rho)"
-  ) +
-  theme_minimal(base_size = 14)
-```
-
-## Main Findings
-
-1.  When EPV is small (EPV=5), Ridge performs better overall than MLE, showing:
-
--   higher or similar AUC
--   lower Brier scores
--   much lower variance
--   more realistic estimates when predictors are correlated
-
-2.  At EPV=10, both methods perform comparably,
-
--   Although, Ridge remains slightly more stable, especially in the presence of noisy predictors.
-
-3.  At EPV=50, MLE and Ridge are almost identical, because shrinkage is no longer needed.
-
-4.  Ridge's adaptive penalty $(\lambda)$ adjusts appropriately:
-
--   strong shrinkage at low EPV
--   minimal shrinkage at high EPV
--   $\rightarrow$ Ridge regression is advantageous when EPV is low or when predictors contain noise or are correlated. When EPV is sufficiently high $(\ge50)$, both methods perform equivalently.
-
-```{r}
-
-```
-
-## Random Forest vs. MLE & Ridge
-
-```{r}
-
-```
-
 :::
 ::::
+
 ## Conclusion
 
 ::: smallest

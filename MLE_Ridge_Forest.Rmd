@@ -114,6 +114,7 @@ ggplot(mean_results, aes(x = factor(P), y = factor(EPV), fill = mean_Brier)) +
 
 ```
 
+# read in resimulated data
 ```{r}
 ridge_extra <- read.csv("simulations_rmse_mae/ridge_simulation_extra_values.csv")
 mle_extra <- read.csv("simulations_rmse_mae/mle_simulation_extra_values.csv")
@@ -132,8 +133,12 @@ fig2 <- combined_metrics |> pivot_longer(cols = c(rMPSE, MAPE, Brier),
   mutate(measure = factor(measure, level = c("rMPSE", "MAPE", "Brier")),
          model = factor(model, level = c("Ridge", "ML", "Random Forest")))
 
+<<<<<<< HEAD
 
 ggplot(combined_long) + 
+=======
+ggplot(fig3) + 
+>>>>>>> refs/remotes/origin/main
   geom_boxplot(aes(x = model, y = value)) + 
   facet_wrap(measure ~ EPV) 
 

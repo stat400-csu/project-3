@@ -156,3 +156,4 @@ ggplot(fig3) +
   facet_wrap(measure ~ parameter, scales = "free") 
 ```
 
+- predictor selection strategies perform worse

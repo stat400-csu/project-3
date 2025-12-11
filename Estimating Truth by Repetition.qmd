@@ -77,9 +77,9 @@ $3 \times 3 \times 2 \times 4$ factor study resulting in 72 distinct combination
 
 ## Maximum Likelihood vs. Ridge
 
-## Random Forest vs. MLE & Ridge, Figure 2
-:::: {.columns}
+## Random Forest vs. MLE & Ridge
 
+::::: columns
 ::: {.column width="60%"}
 ```{r}
 library(knitr)
@@ -88,8 +88,7 @@ include_graphics("images/fig2_boxplots_article.jpg")
 :::
 
 ::: {.column width="40%"}
-
-```{r, fig.width=4, fig.height=6}
+```{r, fig.width=4, fig.height=6, fig.margin = 0}
 library(tidyverse)
 library(ggplot2)
 ridge_extra <- read.csv("simulations_rmse_mae/ridge_simulation_extra_values.csv")
@@ -111,14 +110,45 @@ ggplot(fig2) +
   geom_boxplot(aes(x = model, y = value)) + 
   facet_wrap(measure ~ EPV, scale = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "", y = "")
+  labs(x = "", y = "", caption = "predictor selection strategies perform worse")
 ```
+:::
+:::::
+
+## Random Forest vs. MLE & Ridge
+::::{.columns}
+:::{.column}
+```{r}
+include_graphics("images/fig3_heatmap_article.jpg")
+```
+:::
+:::{.column}
+
+```{r}
+fig3 <- combined_metrics  |>
+  mutate(model = factor(model, level = c("Ridge", "ML", "Random Forest")),
+         P = factor(P),
+        "Predictor effects" = factor(beta_pattern, level = c("equal", "strong","noise", "halfnoise")),
+        "Dist. Predictors" = factor(rho))|> 
+  pivot_longer(cols = c(P, "Predictor effects", "Dist. Predictors"), 
+                             names_to = "parameter",
+                            values_to = "stage") #|>
+  #mutate(parameter = factor(measure, level = c("P", "Dist. Predictors", "Predictor effects")))
+ggplot(fig3) + 
+  geom_tile(aes(x = stage, y = model, fill = rMPSE))+ 
+  scale_fill_distiller(palette = "RdYlGn") +
+  facet_wrap( ~ parameter, scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggplot(fig3) + 
+  geom_tile(aes(x = stage, y = model, fill = MAPE))+ 
+  scale_fill_distiller(palette = "RdYlGn") +
+  facet_wrap( ~ parameter, scales = "free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 
 :::
 ::::
-
-
-
 ## Conclusion
 
 ## 

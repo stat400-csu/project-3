@@ -74,6 +74,32 @@ $3 \times 3 \times 2 \times 4$ factor study resulting in 72 distinct combination
 ## Ridge Logistic Regression
 
 ## Random Forest
+process: fit 500 trees and at each split, consider $\sqrt{P}$ randomly selected predictors
+
+real-world advantages:
+
+- provides information on feature importance
+- works for non-linear relationships
+
+real-world disadvantages:
+
+- less interpretable than linear models
+- more computationally expensive
+
+## Random Forest
+```{r}
+library(ggplot2)
+library(tidyverse)
+rf_extra <- read.csv("simulations_rmse_mae/random_forest_simulation_extra_values.csv")
+
+rf_extra <- rf_extra |>
+  mutate(P = factor(P),
+         EPV = factor(EPV),
+         beta_pattern = factor(beta_pattern))
+ggplot(rf_extra) + geom_boxplot(aes(x = Brier, color = EPV)) + facet_wrap(P ~ beta_pattern)
+```
+on average, higher EPV improves accuracy
+
 
 ## Maximum Likelihood vs. Ridge
 
@@ -89,8 +115,6 @@ include_graphics("images/fig2_boxplots_article.jpg")
 
 ::: {.column width="40%"}
 ```{r, fig.width=4, fig.height=6, fig.margin = 0}
-library(tidyverse)
-library(ggplot2)
 ridge_extra <- read.csv("simulations_rmse_mae/ridge_simulation_extra_values.csv")
 mle_extra <- read.csv("simulations_rmse_mae/mle_simulation_extra_values.csv")
 rf_extra <- read.csv("simulations_rmse_mae/random_forest_simulation_extra_values.csv")

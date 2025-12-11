@@ -47,7 +47,7 @@ editor: visual
 
 ## Our Implementation
 
-### Questions
+#### Questions
 
 -   What effect does EPV have on out-of-sample prediction for logistic regression?
 
@@ -57,7 +57,7 @@ editor: visual
 
 ## Our Implementation
 
-### Variation in Monte Carlo Study: Subset of original study
+#### Variation in Monte Carlo Study: Subset of original study
 
 $3 \times 3 \times 2 \times 4$ factor study resulting in 72 distinct combinations simulated 10 times each
 

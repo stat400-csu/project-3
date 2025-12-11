@@ -255,19 +255,21 @@ Discrimination improves with sample size and is strongest under predictor correl
 Ridge shows strong overall calibration. At low predicted probabilities it tends to overestimate & between \~0.5 & 0.75 it underestimates. At higher probabilities, ridge shows almost perfect calibration.
 
 ## Random Forest
+
 process: fit 500 trees and at each split, consider $\sqrt{P}$ randomly selected predictors
 
 real-world advantages:
 
-- provides information on feature importance
-- works for non-linear relationships
+-   provides information on feature importance
+-   works for non-linear relationships
 
 real-world disadvantages:
 
-- less interpretable than linear models
-- more computationally expensive
+-   less interpretable than linear models
+-   more computationally expensive
 
 ## Random Forest
+
 ```{r}
 library(ggplot2)
 library(tidyverse)
@@ -279,6 +281,7 @@ rf_extra <- rf_extra |>
          beta_pattern = factor(beta_pattern))
 ggplot(rf_extra) + geom_boxplot(aes(x = Brier, color = EPV)) + facet_wrap(P ~ beta_pattern)
 ```
+
 on average, higher EPV improves accuracy
 
 ## Maximum Likelihood vs. Ridge
@@ -472,6 +475,7 @@ ggplot(summary_df,
 -   more realistic estimates when predictors are correlated
 
 ## Main Findings
+
 2.  At EPV=10, both methods perform comparably,
 
 -   Although, Ridge remains slightly more stable, especially in the presence of noisy predictors.
@@ -485,6 +489,7 @@ ggplot(summary_df,
 -   $\rightarrow$ Ridge regression is advantageous when EPV is low or when predictors contain noise or are correlated. When EPV is sufficiently high $(\ge50)$, both methods perform equivalently.
 
 ## Random Forest vs. MLE & Ridge
+
 ::::: columns
 ::: {.column width="60%"}
 ```{r}
@@ -520,14 +525,15 @@ ggplot(fig2) +
 :::::
 
 ## Random Forest vs. MLE & Ridge
-::::{.columns}
-:::{.column}
+
+::::: columns
+::: column
 ```{r}
 include_graphics("images/fig3_heatmap_article.jpg")
 ```
 :::
-:::{.column}
 
+::: column
 ```{r}
 fig3 <- combined_metrics  |>
   mutate(model = factor(model, level = c("Ridge", "ML", "Random Forest")),
@@ -550,13 +556,12 @@ ggplot(fig3) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 :::
-::::
+:::::
 
 ## Conclusion
 
 ::: smallest
--   Across all models, EVP alone did not explain predictive performance
--   Ridge & Random Forest often outperformed MLE at low EPV, but performance improved with larger N and correlated predictors, not EPV
--   Calibration patterns showed shrinkage effects: Ridge slightly underestimates mid-range probabilities
--   Overall, our Monte Carlo results reinforce that **sample size, predictor structure, & signal strength** matter more than EPV when evaluating logistic prediction models
+-   Across all models, EPV alone did not explain predictive performance
+-   Ridge & Random Forest often outperformed MLE at low EPV, but performance improved with larger N, correlated predictors & stronger effects
+-   Our Monte Carlo results reinforce that the three models differed in accuracy and stability, but their performance patterns were driven by the same factors: **sample size, predictor correlation & effect structure—not just EPV**.
 :::

@@ -3,61 +3,51 @@ title: "Estimating Truth by Repetition: A Monte Carlo Simulation"
 author: "Group 3: Andi Mellyn, Jessica Reyes, Hope Winsor"
 format: revealjs
 editor: visual
-theme: sky
 ---
 
-## Research Study
+## Sample Size for Binary Logistic Prediction Models: Beyond events per variable criteria
 
-<br>
-
-"Sample size for binary logistic prediction models: beyond events per variable criteria", Maarten et. al
-
-*Statistical Methods in Medical Research*
-
--   analyzing out-of-sample accuracy in logistic regression
-
-    -   Clinical simulation studies for outcomes like positive/negative for a disease
+-   clinical simulation studies for binary outcomes
 
     -   want accurate predictions on new data
 
-## Events Per Variable
+-   *Events Per Variable* (EPV), the ratio of the number of events in the smaller class to the number of degrees of freedom
 
-*Events Per Variable* (EPV), a ratio of the number of events to the number of degrees of freedom
+    -   think signal to noise
 
--   think signal to noise
+    -   minimum of 10 is standard
 
--   used to decide the minimum sample size & maximum number of predictors to use in a study
-
--   standard is EPV ≥ 10
-
--   EPV has shown to be either too lenient or too strict depending on the modeling strategy & does not strongly relate to prediction accuracy
-
-## Simulation Study
-created more than 4,000 different combinations and over 12,000,000 datasets
-
--   different combinations of EPV, event ratios, AUC, and #, distribution, effect of predictors
--   7 different models: Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
--   6 predictive performance metrics: rMPSE, MAPE, calibration slope, average calibration in large, $\Delta$AUC, Brier
-
-## Our Implementation
-
-#### Questions
+## Research Questions
 
 -   What effect does EPV have on out-of-sample prediction for logistic regression?
 
--   What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
-
 -   Are there metrics that better estimate out-of-sample prediction? If so, which ones?
+
+-   Beyond the results of the paper: What effect does EPV have on out-of-sample prediction for non-parametric methods of binary classification?
+
+## Simulation Study
+
+-   created more than 4,000 different combinations and over 12,000,000 datasets
+
+    -   different combinations of EPV, event ratios, number and distribution of predictors, AUC, and predictor effects
+
+-   7 different models
+
+    -   Maximum Likelihood, backwards subset selection, Firth's penalized likelihood, heuristic shrinkage, Ridge, LASSO
 
 ## Our Implementation
 
-#### Variation in Monte Carlo Study: Subset of original study
+-   Variables for consideration
 
-$3 \times 3 \times 2 \times 4$ factor study resulting in 72 distinct combinations simulated 10 times each
+    -   EPV: 5, 10, 50
 
--   EPV (5, 10, 50), number of predictors (P) (4, 8, 12), distribution of predictors (MVN(0), MVN(0.5)), beta patterns: (equal effect, 1 strong, 1 noise, 1/2 noise)
+    -   Number of predictors: 4, 8, 12
 
--   predictive performance metrics: rMPSE, MAE, Brier
+    -   Distribution of predictors: MVN(0), MVN(0.5)
+
+    -   Predictor effects: all equal, one strong, one noise, half noise
+
+-   Predictors normally distributed
 
 -   Training data set has $N = \frac{EPV * P}{Pr(Y = 1)}$ data points
 
@@ -239,62 +229,32 @@ $Loss(w) = - l(w) + \lambda \sum_{j=1}^pw_j^2$
 
 ## Ridge Monte Carlo Performance
 
-:::: {.columns}
-::: {.column width="45%"}
+::::::: columns
+:::: {.column width="45%"}
 ![](ridge_brier.png){width="85%"}
 
 ::: smallest
 Brier score is lower when predictors are correlated (P = 0) showing how ridge is well suited to deal with this.
 :::
-:::
+::::
 
-::: {.column width="45%"}
+:::: {.column width="45%"}
 ![](ridge_auc.png){width="85%"}
 
 ::: smallest
-Discrimination improves with sample size and is strongest under predictor correlation (ρ = 0.5)  
-:::
+Discrimination improves with sample size and is strongest under predictor correlation (ρ = 0.5)
 :::
 ::::
+:::::::
 
 ## Ridge Calibration Plot
 
 ![](ridge_cali.png){width="100%"}
 
-Ridge shows strong overall calibration. At low predicted probabilities it tends to overestimate & between ~0.5 & 0.75 it underestimates.
-At higher probabilities, ridge shows almost perfect calibration.
+Ridge shows strong overall calibration. At low predicted probabilities it tends to overestimate & between \~0.5 & 0.75 it underestimates. At higher probabilities, ridge shows almost perfect calibration.
 
 ## Random Forest
-process: fit 500 trees and at each split, consider $\sqrt{P}$ randomly selected predictors
 
-real-world advantages:
-
-- provides information on feature importance
-- works for non-linear relationships
-
-real-world disadvantages:
-
-- less interpretable than linear models
-- more computationally expensive
-
-## Random Forest
-```{r}
-library(ggplot2)
-library(tidyverse)
-rf_extra <- read.csv("simulations_rmse_mae/random_forest_simulation_extra_values.csv")
-
-rf_extra <- rf_extra |>
-  mutate(P = factor(P),
-         EPV = factor(EPV),
-         beta_pattern = factor(beta_pattern))
-ggplot(rf_extra) + geom_boxplot(aes(x = Brier, color = EPV)) + facet_wrap(P ~ beta_pattern)
-```
-on average, higher EPV improves accuracy
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 565937a521152afa7c294402665e74698dd8fef3
 ```{r}
 
 ```
@@ -454,75 +414,6 @@ summary_df <- results_df %>%
 
 knitr::kable(summary_df, digits = 3)
 ```
-<<<<<<< HEAD
-=======
-## Random Forest vs. MLE & Ridge
-
-::::: columns
-::: {.column width="60%"}
-```{r}
-library(knitr)
-include_graphics("images/fig2_boxplots_article.jpg")
-```
-:::
-
-::: {.column width="40%"}
-```{r, fig.width=4, fig.height=6, fig.margin = 0}
-ridge_extra <- read.csv("simulations_rmse_mae/ridge_simulation_extra_values.csv")
-mle_extra <- read.csv("simulations_rmse_mae/mle_simulation_extra_values.csv")
-rf_extra <- read.csv("simulations_rmse_mae/random_forest_simulation_extra_values.csv")
-rf_extra$model <- "Random Forest"
-mle_extra$model <- "ML"
-
-combined_metrics <- rbind(ridge_extra, mle_extra)
-combined_metrics <- rbind(combined_metrics, rf_extra)
-
-fig2 <- combined_metrics |> pivot_longer(cols = c(rMPSE, MAPE, Brier), 
-                                         names_to = "measure",
-                                         values_to = "value") |>
-  mutate(measure = factor(measure, level = c("rMPSE", "MAPE", "Brier")),
-         model = factor(model, level = c("Ridge", "ML", "Random Forest")))
-
-ggplot(fig2) + 
-  geom_boxplot(aes(x = model, y = value)) + 
-  facet_wrap(measure ~ EPV, scale = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "", y = "", caption = "predictor selection strategies perform worse")
-```
-:::
-:::::
-
-## Random Forest vs. MLE & Ridge
-::::{.columns}
-:::{.column}
-```{r}
-include_graphics("images/fig3_heatmap_article.jpg")
-```
-:::
-:::{.column}
-
-```{r}
-fig3 <- combined_metrics  |>
-  mutate(model = factor(model, level = c("Ridge", "ML", "Random Forest")),
-         P = factor(P),
-        "Predictor effects" = factor(beta_pattern, level = c("equal", "strong","noise", "halfnoise")),
-        "Dist. Predictors" = factor(rho))|> 
-  pivot_longer(cols = c(P, "Predictor effects", "Dist. Predictors"), 
-                             names_to = "parameter",
-                            values_to = "stage") #|>
-  #mutate(parameter = factor(measure, level = c("P", "Dist. Predictors", "Predictor effects")))
-ggplot(fig3) + 
-  geom_tile(aes(x = stage, y = model, fill = rMPSE))+ 
-  scale_fill_distiller(palette = "RdYlGn") +
-  facet_wrap( ~ parameter, scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggplot(fig3) + 
-  geom_tile(aes(x = stage, y = model, fill = MAPE))+ 
-  scale_fill_distiller(palette = "RdYlGn") +
-  facet_wrap( ~ parameter, scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
->>>>>>> 565937a521152afa7c294402665e74698dd8fef3
 
 ```{r}
 #| echo: false
@@ -548,11 +439,6 @@ ggplot(summary_df,
   ) +
   theme_minimal(base_size = 14)
 ```
-<<<<<<< HEAD
-=======
-:::
-::::
->>>>>>> 565937a521152afa7c294402665e74698dd8fef3
 
 ## Main Findings
 
@@ -574,7 +460,6 @@ ggplot(summary_df,
 -   strong shrinkage at low EPV
 -   minimal shrinkage at high EPV
 -   $\rightarrow$ Ridge regression is advantageous when EPV is low or when predictors contain noise or are correlated. When EPV is sufficiently high $(\ge50)$, both methods perform equivalently.
-<<<<<<< HEAD
 
 ```{r}
 
@@ -585,8 +470,6 @@ ggplot(summary_df,
 ```{r}
 
 ```
-=======
->>>>>>> 565937a521152afa7c294402665e74698dd8fef3
 
 ## Conclusion
 

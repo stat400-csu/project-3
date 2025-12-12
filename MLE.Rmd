@@ -137,3 +137,24 @@ results_df <- dplyr::bind_rows(results_list)
 write.csv(results_df, "MLE_Simulation.csv", row.names = FALSE)
 ```
 
+```{r}
+roc_obj <- roc(dat$y, predict(fit, type="response"))
+plot(roc_obj, col="rosybrown", lwd=2)
+```
+```{r}
+library(ggplot2)
+
+cal_df <- dat %>%
+  mutate(prob = predict(fit, type="response"),
+         decile = ntile(prob, 10)) %>%
+  group_by(decile) %>%
+  summarize(obs = mean(y), pred = mean(prob))
+
+ggplot(cal_df, aes(pred, obs)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, color = "yellow4", lty = 2) +
+  ylim(0,1) + xlim(0,1) +
+  ggtitle("Calibration Plot")
+```
+

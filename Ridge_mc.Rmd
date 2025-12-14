@@ -184,7 +184,7 @@ knitr::kable(ridge_condition_summary, digits = 3)
 
 ```
 
-```{r AUC plot}
+```{r ridge AUC plot}
 # AUC plot
 
 ggplot(ridge_condition_summary,
@@ -224,8 +224,6 @@ ggplot(ridge_condition_summary,
                 fill = factor(rho)),
             alpha = 0.15, color = NA)
   
-
-
 ```
 
 \hstart

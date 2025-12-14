@@ -129,7 +129,7 @@ for (EPV in EPV_vals) {
           N_star <- ceiling(5000 / event_frac)
           
           # NEW FOR TESTING: SIMULATE TRAINING & TESTING DATA
-          df_train <- simulate_logit(N = N,      P = P, rho = rho, beta_pattern = bp)
+          df_train <- simulate_logit(N = N, P = P, rho = rho, beta_pattern = bp)
           df_test  <- simulate_logit(N = N_star, P = P, rho = rho, beta_pattern = bp)
         
           # simulate one dataset -> USED ON TRAINING
@@ -174,7 +174,7 @@ head(ridge_results_testing_df)
 
 # matching the research paper summary stats
 
-ridge_condition_summary <- ridge_results_df |>
+ridge_condition_summary <- ridge_results_testing_df |>
   group_by(EPV, P, rho, beta_pattern) |>
   summarise(
     n_sims = n(),

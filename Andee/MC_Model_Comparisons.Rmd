@@ -1,0 +1,947 @@
+---
+title: "MC Model Comparisons"
+author: "Group 3: Andi Mellyn, Jessica Reyes, Hope Winsor"
+date: "2025-12-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+\colorlet{shadecolor}{gray!10}
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+library(MASS)
+library(GGally)
+library(tidymodels)
+library(glmnet)
+library(pROC)
+library(randomForest)
+library(dplyr)
+library(here)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE)
+```
+
+\newcommand{\hstart}{ \colorlet{shadecolor}{green!20}
+\begin{shaded} }
+\newcommand{\hstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+
+\newcommand{\pstart}{ \colorlet{shadecolor}{gray!20}
+\begin{shaded} }
+\newcommand{\pstop}{  \end{shaded} \colorlet{shadecolor}{gray!10}}
+
+```{r}
+# helper
+mle_path   <- here("MLE_Simulation.csv")
+ridge_path <- here("ridge_mc_testing_results.csv")
+rf_path    <- here("RandomForest_Simulation.csv")
+```
+
+
+\hstart
+
+# Maximum Liklihood, Ridge, & Random Forest: A Monte Carlo Model Comparison
+
+\hstop
+
+\hstart
+
+## Source functions and simulated data for model comparisons
+
+\hstop
+
+```{r source functions}
+# simulate data -> logistic regression
+
+simulate_logit <- function(N, P, rho, beta_pattern) {
+  
+  # Predictor distribution 
+  # Correlation = rho (0 or 0.5)
+  Sigma <- matrix(rho, P, P)
+  diag(Sigma) <- 1
+  
+  X <- mvrnorm(n = N, mu = rep(0, P), Sigma = Sigma)
+  
+  # Predictor effects 
+  if (beta_pattern == "equal") {
+    beta <- rep(0.5, P)
+    
+  } else if (beta_pattern == "strong") {
+    beta <- c(1.0, rep(0.2, P-1))      # 1 strong effect
+    
+  } else if (beta_pattern == "noise") {
+    beta <- c(0, rep(0.3, P-1))        # first predictor is noise
+    
+  } else if (beta_pattern == "halfnoise") {
+    beta <- c(rep(0, P/2), rep(0.3, P/2))  # first half noise
+    
+  } else {
+    stop("Unknown beta pattern")
+  }
+  
+  # Linear predictor + logistic link
+  eta <- X %*% beta
+  pi  <- 1/(1 + exp(-eta))
+  
+  # Binary outcome from Bernoulli
+  y <- rbinom(N, size = 1, prob = pi)
+  
+  data.frame(y = y, X)
+}
+
+```
+
+\hstart
+
+## Background
+replicating "Sample size for binary logistic prediction models: Beyond events per variable criteria" by Smeden et al.
+
+out-of-sample performance of developed prediction models studied before and after regression shrinkage and variable selection
+
+concluded EPV does not have a strong relation with metrics of predictive performance and is not an appropriate cirterian for binary prediction model development studies
+
+better approximated by considering number of predictors, total sample size, and events fraction
+
+key contributing factor to predictive performance is size of data set relative to number of predictors
+
+events per variable: ratio of number of events, the number of observations in smaller of two outcome groups, relative to the number of degrees of freedom/parameters required to represent the predictors considered in the model
+
+medical literature uses EPV of 10 as minimum but there is skepticism as to the validity of the scientific backing of this benchmark. in step-wise predictor selection, EPV greater than 50 may be needed. Good out-of-sample predictive performance demonstrated with regression shrinkage techniques with EPV less than 10.
+
+modeling:
+predictive performance evaluated on large sample validation data sets
+
+maximum likelihood (ML), ridge regression, LASSO, Firth's correction, heuristic shrinkage after ML estimation, backwards elimination predictor selection
+
+EPV, the events fraction, number of candidate predictors, area under the ROC curve, distribution of predictor variables, type of predictor variable effects
+
+factorial simulation study with 4,032 models
+5,000 simulation runs
+
+1. development data set generated
+    a. for each of N = EPV * P/Pr(Y = 1) individuals, draw predictor variable vector $\mathbf{x}_i$
+    b. for each individual, generate $y_i$ = Bernoulli($\pi_i$)
+2. fit binary logistic prediction models with each of the considered regression shrinkage and predictor selection strategies
+3. large validation data set generated, N* = 5000/Pr(Y = 1), using sampling approach from (1)
+4. evaluate performance of prediction models (2) on validation data (3)
+
+measures of performance:
+- average loss of area under ROC curve: average difference between AUC of generated data and AUC of model (defined by distribution of predictor variables); higher values closer to zero indicate better discriminative performance
+- median calibration slope (CS): closer to 1 = better performance, cs < 1 = overfitting, cs > 1 = underfitting
+- average calibration in the large (CIL): difference between generated evens fraction and average estimated probabilities $\frac{\sum_{i} y_i}{N} - \frac{\sum_i \hat{\pi}_i}{N}$; closer to 0 = better performance, CIL > 0 = systematic overestimation of estimated probabilities, CIL < 0 = underestimation
+- average Brier score
+- square root of mean squared prediction error
+- mean absolute prediction error
+
+issues with maximum likelihood:
+
+1. not optimal for making model predictions of the expected risk in new individuals -- in most circumstances shrinkage estimators can be defined that have lower expected error for estimating probabilities in new individuals than ML estimators; benefit of shrinkage decreases with increasing EPV
+2. ML coefficients are biased toward more extreme effects; bias reduces with increasing EPV but may not completely disappear
+3. model estimation becomes unstable when predictor effects are large or sparse -- results in extreme probability estimates close to boundaries of 0 or 1; less likely with increasing EPV
+4. estimation becomes unstable when predictors are strongly correlated, inflates standard errors for predictor effects; spurious collinearity less likely with increasing EPV
+
+Ridge regression:
+penalizes the likelihood proportionally to the sum of squared predictor effects
+
+predictors standardized to have mean zero and unit variance
+
+10-fold cross validation used to determine the optimal value for the tuning parameter
+
+used to deal with collinearity (4), can also be used to deal with separation (3)
+
+GLMnet used to estimate Ridge, logistf used to estimate ML, MASS used to generate predictor data
+
+\hstop
+
+
+results:
+- improved predictive performance when EPV increased
+- little association between Brier and EPV beyond EPV 20
+- CIL consistently close to perfect average except for Firth
+- CS improved with increasing EPV
+- all models except for Ridge showed signs of overfitting (CS above 1)
+- impact of shrinkage lessened with increasing EPV
+- little variation in Brier and CIL between shrinkage strategies
+
+\hstart
+
+## 1. Maximum Liklihood
+
+\hstop
+
+```{r maximum likelihood}
+# Maximum Likelihood
+# Data Simulation Function
+
+data_simulation_function <- function(N, P, rho, beta_pattern) {
+  Sigma <- matrix(rho, P, P)
+  diag(Sigma) = 1
+  
+  X <- mvrnorm(n = N, mu = rep(0, P), Sigma = Sigma)
+  
+  # Set coefficients
+  if (beta_pattern == "equal") {
+    beta <- rep(0.5, P)
+  } else if (beta_pattern == "strong") {
+    beta <- c(1, rep(0.2, P-1))
+  } else if (beta_pattern == "noise") {
+    beta <- c(0, rep(0.3, P-1))
+  } else if (beta_pattern == "halfnoise") {
+    beta <- c(rep(0, P/2), rep(0.3, P/2))
+  } else stop("Unknown beta pattern")
+  
+  eta <- X %*% beta
+  p <- 1 / (1 + exp(-eta))
+  
+  y <- rbinom(N, 1, p)
+  
+  data.frame(y = y, X)
+}
+
+```
+
+```{r}
+# Model Fitting
+
+model_fitting_function <- function(train_data) {
+  glm(y ~ ., data = train_data, family = binomial)
+}
+
+```
+
+```{r}
+# Model Assessment function
+
+model_assessment_function <- function(model, test_data) {
+  probs <- predict(model, newdata = test_data, type = "response")
+  
+  auc_val <- auc(test_data$y, probs)
+  brier <- mean((test_data$y - probs)^2)
+  
+  tibble(
+    AUC = as.numeric(auc_val),
+    Brier = brier
+  )
+}
+
+```
+
+```{r}
+
+fit_logistic_mle <- function(dat) {
+  glm(y ~ ., data = dat, family = binomial)
+}
+
+evaluate_mle_model <- function(fit, dat) {
+  probs <- predict(fit, newdata = dat, type = "response")
+  auc_val <- auc(dat$y, probs)
+  brier <- mean((dat$y - probs)^2)
+  
+  tibble(AUC = as.numeric(auc_val), Brier = brier, lambda = NA)
+}
+
+```
+
+
+```{r mle test run}
+# testing the mle model for one run
+
+set.seed(400)
+
+# simulating one dataset 
+dat_mle <- data_simulation_function(N = 1000, P = 8, rho = 0.5, beta_pattern = "strong")
+fit_mle <- model_fitting_function(dat_mle)
+
+mle_fit <- model_fitting_function(dat_mle)
+mle_summary <- model_assessment_function(fit_mle, dat_mle)
+
+mle_summary
+
+```
+
+```{r mle_mc, eval=FALSE}
+
+set.seed(400)
+
+# Simulation loop
+
+EPV_vals <- c(5, 10, 50)
+event_frac <- 0.5    
+
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+B <- 10  
+
+results_list <- list()
+iter <- 1
+
+for (EPV in EPV_vals) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
+          
+          # Determine sample sizes 
+          N  <- ceiling((EPV * P) / event_frac)
+          N_star <- ceiling(5000 / event_frac)   
+          
+          # Training data 
+          train_data <- data_simulation_function(N, P, rho, bp)
+          
+          # Test data
+          test_data  <- data_simulation_function(N_star, P, rho, bp)
+          
+          # fit model
+          fit_model <- model_fitting_function(train_data)
+          
+          # evaluate model
+          metrics <- model_assessment_function(fit_model, test_data)
+          
+          metrics$model <- "MLE"  
+          
+          # metadata
+          metrics <- metrics %>%
+            mutate(
+              model = "MLE",
+              EPV = EPV,
+              P = P,
+              rho = rho,
+              beta_pattern = bp,
+              sim = b
+            )
+          
+          # results
+          results_list[[iter]] <- metrics
+          iter <- iter + 1
+        }
+      }
+    }
+  }
+}
+results_df_mle <- dplyr::bind_rows(results_list); results_df_mle
+write.csv(results_df_mle, mle_path, row.names = FALSE)
+
+```
+
+```{r read mle csv}
+# read file
+
+mle_results <- read.csv(mle_path)
+
+```
+
+```{r}
+
+roc_obj <- roc(dat_mle$y, predict(fit_mle, newdata = dat_mle, type="response"))
+plot(roc_obj, col="rosybrown", lwd=2)
+
+```
+
+```{r mle calibration}
+# MLE calibration plot
+
+cal_df <- dat_mle %>%
+  mutate(prob = predict(fit_mle, newdata = dat_mle, type="response"),
+         decile = ntile(prob, 10)) %>%
+  group_by(decile) %>%
+  summarize(obs = mean(y), pred = mean(prob))
+
+ggplot(cal_df, aes(pred, obs)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, color = "yellow4", lty = 2) +
+  ylim(0,1) + xlim(0,1) +
+  ggtitle("Calibration Plot")
+
+```
+
+\hstart
+
+## 2. Ridge Regression
+
+\hstop
+
+```{r ridge regression}
+# ridge regression
+
+fit_logistic_ridge <- function(dat) {
+  # dat: data.frame with first column y and the rest predictors
+  
+  X <- as.matrix(dat[ , -1])  # all columns except the first
+  y <- dat$y                  # first column is y
+  
+  # alpha = 0 -> ridge penalty
+  cvfit <- cv.glmnet(
+    x = X,
+    y = y,
+    alpha = 0, 
+    family = "binomial"
+  )
+  
+  cvfit
+}
+
+```
+
+```{r evaluate ridge model}
+# ridge-specific evaluate model
+# evaluating AUC and brier scores
+
+evaluate_ridge_model <- function(cvfit, dat) {
+  X <- as.matrix(dat[ , -1])
+  y <- dat$y
+  
+  # lambda.min from CV (the value that minimizes the error)
+  probs <- predict(cvfit, newx = X, type = "response", s = "lambda.min")
+  
+  auc_val <- pROC::auc(y, probs)
+  brier <- mean((y - probs)^2)
+  
+  tibble::tibble(
+    AUC = as.numeric(auc_val), # AUC: area under the ROC curve
+    Brier = brier, # brier: measure of the accuracy of probabilistic predictions
+    lambda = cvfit$lambda.min
+  )
+}
+
+```
+
+```{r test run}
+# testing the ridge model for one run
+
+set.seed(400)
+
+# simulating one dataset 
+dat_test <- simulate_logit(N = 1000, P = 8, rho = 0.5, beta_pattern = "strong")
+
+ridge_fit <- fit_logistic_ridge(dat_test)
+ridge_summary <- evaluate_ridge_model(ridge_fit, dat_test)
+
+ridge_summary
+
+```
+
+```{r ridge_mc, eval=FALSE}
+# Monte Carlo simulation settings (subset of Van Calster et al. design)
+
+EPV_vals <- c(5, 10, 50)    # subset -> research study uses 7 values
+event_frac <- 0.5           # subset -> research study uses 4 fractions
+P_vals <- c(4, 8, 12)       # same p-vals as study
+rho_vals <- c(0, 0.5)       # same continuous predictors
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")   # same beta patterns
+
+B <- 10  # number of Monte Carlo repetitions per condition
+
+
+# Monte Carlo loop for ridge regression
+
+set.seed(400)
+
+ridge_results <- list()
+
+iter <- 1
+
+for (EPV in EPV_vals) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
+          
+          # compute sample size N from EPV formula:
+          # EPV = (N * event_frac) / P => N = EPV * P / event_frac
+          N <- ceiling(EPV * P / event_frac)
+          
+          ## NEW FOR TESTING
+          N_star <- ceiling(5000 / event_frac)
+          
+          # NEW FOR TESTING: SIMULATE TRAINING & TESTING DATA
+          df_train <- simulate_logit(N = N, P = P, rho = rho, beta_pattern = bp)
+          df_test  <- simulate_logit(N = N_star, P = P, rho = rho, beta_pattern = bp)
+        
+          # simulate one dataset -> USED ON TRAINING
+          dat <- simulate_logit(N = N, P = P, rho = rho, beta_pattern = bp)
+        
+          # fit ridge model -> NEW fit on df_train
+          ridge_fit <- fit_logistic_ridge(df_train)
+        
+          # evaluate performance on this dataset
+          ridge_summary <- evaluate_ridge_model(ridge_fit, df_test)
+        
+          # store results
+          ridge_results[[iter]] <- tibble(
+            model = "ridge",
+            EPV = EPV,
+            sim = b, 
+            P = P, 
+            rho = rho,
+            beta_pattern = bp,
+            AUC = ridge_summary$AUC,
+            Brier = ridge_summary$Brier,
+            lambda = ridge_summary$lambda
+          )
+          iter <- iter + 1
+        }
+      
+      }
+    
+    }
+  
+  }
+  
+}
+
+
+ridge_results_df <- bind_rows(ridge_results)
+head(ridge_results_df)
+write.csv(ridge_results_df, file = ridge_path, row.names = FALSE)
+
+```
+
+```{r read ridge_csv}
+# read file
+
+ridge_results <- read.csv(ridge_path)
+
+```
+
+```{r ridge summary stats}
+
+# matching the research paper summary stats
+
+ridge_condition_summary <- ridge_results |>
+  group_by(EPV, P, rho, beta_pattern) |>
+  summarise(
+    n_sims = n(),
+    mean_AUC = mean(AUC),
+    sd_AUC = sd(AUC),
+    mean_Brier = mean(Brier), 
+    sd_Brier = sd(Brier),
+    mean_lambda = mean(lambda),
+    .groups = "drop"
+  )
+
+ridge_condition_summary
+knitr::kable(ridge_condition_summary, digits = 3)
+
+```
+
+```{r ridge AUC plot}
+# AUC plot
+
+ggplot(ridge_condition_summary,
+       aes(x = factor(P), y = mean_AUC, group = factor(rho), color = factor(rho))) +
+  geom_point(size = 3) +
+  geom_line() +
+  facet_wrap(~ beta_pattern) +
+  labs(
+    title = "Ridge Regression: Mean AUC by Condition",
+    x = "Number of Predictors (P)",
+    y = "Mean AUC",
+    color = "Correlation (rho)"
+  ) +
+  geom_ribbon(aes(ymin = mean_AUC - sd_AUC,
+                ymax = mean_AUC + sd_AUC,
+                fill = factor(rho)),
+            alpha = 0.30, color = NA)
+
+```
+
+```{r Brier plot}
+# Brier plot
+
+ggplot(ridge_condition_summary,
+       aes(x = factor(P), y = mean_Brier, group = factor(rho), color = factor(rho))) +
+  geom_point(size = 3) +
+  geom_line() +
+  facet_wrap(~ beta_pattern) +
+  labs(
+    title = "Ridge Regression: Mean Brier Score by Condition",
+    x = "Number of Predictors (P)",
+    y = "Mean Brier Score",
+    color = "Correlation (rho)"
+  ) +
+  geom_ribbon(aes(ymin = mean_Brier - sd_Brier,
+                ymax = mean_Brier + sd_Brier,
+                fill = factor(rho)),
+            alpha = 0.15, color = NA)
+  
+
+
+```
+
+\hstart
+
+### Ridge Calibration Plot
+
+\hstop
+
+\pstart
+
+For illustration purposes we show a calibration plot for a SINGLE representative scenario:
+$N = 1000, \\P = 8, \\rho = 0.5$, 
+beta pattern = $"strong"$.
+
+\pstop
+
+```{r ridge calibration setup}
+# calibration plot - how well do the predicted values line up with the actual observed values
+
+set.seed(400)
+
+# simulating a single dataset for calibration
+dat_cal <- simulate_logit(
+  N = 1000,
+  P = 8, 
+  rho = 0.5,
+  beta_pattern = "strong"
+)
+
+# fit ridge logistic regression
+ridge_fit_cal <- fit_logistic_ridge(dat_cal)
+
+```
+
+```{r ridge calibration data}
+
+# design matrix for glmnet
+X_cal <- as.matrix(dat_cal[ , -1])
+
+# predicted probabilities from the ridge model
+ridge_probs <- predict(
+  ridge_fit_cal,
+  newx = X_cal,
+  type = "response", 
+  s = "lambda.min"
+)
+
+# build calibration dataframe
+ridge_cal_df <- dat_cal |>
+  mutate(prob = as.numeric(ridge_probs),
+         decile = ntile(prob, 10)) |>
+  group_by(decile) |>
+  summarise(obs = mean(y), pred = mean(prob), .groups = "drop")
+
+ridge_cal_df
+  
+```
+
+\hstart
+
+## 3. Random Forest
+
+\hstop
+
+```{r}
+# Random Forest simulate logit function
+# requires factoring
+
+simulate_logit_rf <- function(N, P, rho, beta_pattern) {
+  Sigma <- matrix(rho, P, P)
+  diag(Sigma) <- 1
+  
+  X <- mvrnorm(n = N, mu = rep(0, P), Sigma = Sigma)
+  
+  if (beta_pattern == "equal") {
+    beta <- rep(0.5, P)
+  } else if (beta_pattern == "strong") {
+    beta <- c(1.0, rep(0.2, P-1))
+  } else if (beta_pattern == "noise") {
+    beta <- c(0, rep(0.3, P-1))
+  } else if (beta_pattern == "halfnoise") {
+    beta <- c(rep(0, P/2), rep(0.3, P/2))
+  } else {
+    stop("Unknown beta pattern")
+  }
+  
+  eta <- X %*% beta
+  pi  <- 1/(1 + exp(-eta))
+  y <- as.factor(rbinom(N, 1, pi))
+  
+  data.frame(y = y, X)
+}
+
+```
+
+```{r random forest}
+# random forest fit model
+
+fit_rf_model <- function(dat) {
+  rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
+  set_engine("randomForest", importance = TRUE) |>
+  set_mode("classification")
+
+  rf_fit <- rf_spec |> fit(y ~ ., data = dat)
+  rf_fit
+}
+
+```
+
+```{r}
+
+fit_rf_model <- function(dat) {
+  rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
+  set_engine("randomForest", importance = TRUE) |>
+  set_mode("classification")
+
+  rf_fit <- rf_spec |> fit(y ~ ., data = dat)
+  rf_fit
+}
+
+```
+
+```{r}
+
+evaluate_rf_model <- function(fit, dat) {
+  probs <- fit |> augment(new_data = dat) |> pull(.pred_1)
+  
+  auc_val <- auc(as.numeric(dat$y), as.numeric(probs))
+  brier <- mean((as.numeric(dat$y) - as.numeric(probs))^2)
+  
+  tibble(AUC = as.numeric(auc_val), Brier = brier)
+}
+
+```
+
+```{r}
+  # generate data 
+  EPV <- 50
+  event_frac <- 0.5
+  P <- 12
+  rho <- 0.5
+  bp <- "equal"
+  
+  # time model fit
+  start <-Sys.time()
+  
+  # Determine total sample size
+  N <- ceiling((EPV * P) / event_frac)
+  N_star <- ceiling(5000/event_frac)
+  
+  # Simulate dataset
+  df_train <- simulate_logit_rf(N, P, rho, bp)
+  df_test <- simulate_logit_rf(N_star, P, rho, bp)
+  
+  # fit model
+  rf <- fit_rf_model(df_train)
+  
+  # evaluate model
+  results <- evaluate_rf_model(rf, df_test)
+  
+  end <-  Sys.time()
+  end - start
+  # about 2 seconds per model * 10 simulations * 72 models = 1,4000 seconds or 24 minutes
+  
+```
+
+```{r forest_mc, eval=FALSE}
+# run for all datasets
+
+set.seed(400)
+
+EPV_vals <- c(5, 10, 50)
+event_frac <- 0.5
+
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+B <- 10  # number of Monte Carlo repetitions
+
+save_results <- data.frame()
+
+for (EPV in EPV_vals) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
+          
+          # Determine total sample size
+          N <- ceiling((EPV * P) / event_frac)
+          N_star <- ceiling(5000/event_frac)
+          
+          # Simulate dataset
+          df_train <- simulate_logit_rf(N, P, rho, bp)
+          df_test <- simulate_logit_rf(N_star, P, rho, bp)
+          
+          # fit random forest
+          fit <- fit_rf_model(df_train)
+          
+          # evaluate random forest
+          eval_rf <- evaluate_rf_model(fit, df_test)
+          
+          ### Store combined ###
+          combined <- eval_rf %>%
+            mutate(
+              EPV = EPV,
+              P = P,
+              rho = rho,
+              beta_pattern = bp,
+              sim = b
+            )
+          save_results <- rbind(save_results, combined)
+        }
+      }
+    }
+  }
+}
+
+save_results$model <- "Random Forest"
+save_results$lambda <- NA
+write.csv(save_results, rf_path, row.names = FALSE)
+
+```
+
+```{r read forest csv}
+# read file
+
+forest_results <- read.csv(rf_path)
+
+```
+
+
+\hstart
+
+# Comparisons
+
+\hstop
+
+\hstart
+
+## Maximum Likelihood vs. Ridge Regression
+
+\hstop
+
+```{r maximum likelihood vs ridge}
+# Maximum Likelihood vs Ridge
+
+fit_logistic_ridge <- function(dat) {
+  X <- as.matrix(dat[, -1])
+  y <- dat$y
+  
+  cv.glmnet(x = X, y = y, alpha = 0, family = "binomial")
+}
+
+evaluate_ridge_model <- function(cvfit, dat) {
+  X <- as.matrix(dat[, -1])
+  y <- dat$y
+  
+  probs <- predict(cvfit, newx = X, type = "response", s = "lambda.min")
+  
+  auc_val <- auc(y, probs)
+  brier <- mean((y - probs)^2)
+  
+  tibble(
+    AUC = as.numeric(auc_val),
+    Brier = brier,
+    lambda = cvfit$lambda.min
+  )
+}
+
+```
+
+```{r eval=FALSE}
+# slow code chunk
+
+set.seed(400)
+
+EPV_vals <- c(5, 10, 50)
+event_frac <- 0.5    # FIXED
+
+P_vals <- c(4, 8, 12)
+rho_vals <- c(0, 0.5)
+beta_patterns <- c("equal", "strong", "noise", "halfnoise")
+
+B <- 10  # number of Monte Carlo repetitions
+
+all_results <- list()
+iter <- 1
+
+for (EPV in EPV_vals) {
+  for (P in P_vals) {
+    for (rho in rho_vals) {
+      for (bp in beta_patterns) {
+        for (b in 1:B) {
+          
+          # Determine total sample size
+          N <- ceiling((EPV * P) / event_frac)
+          
+          # Simulate dataset
+          dat <- simulate_logit(N, P, rho, bp)
+          
+          ### MLE ###
+          fit_mle <- fit_logistic_mle(dat)
+          eval_mle <- evaluate_mle_model(fit_mle, dat)
+          eval_mle$model <- "MLE"
+          
+          ### Ridge ###
+          fit_ridge <- fit_logistic_ridge(dat)
+          eval_ridge <- evaluate_ridge_model(fit_ridge, dat)
+          eval_ridge$model <- "Ridge"
+          
+          ### Store combined ###
+          combined <- bind_rows(eval_mle, eval_ridge) %>%
+            mutate(
+              EPV = EPV,
+              P = P,
+              rho = rho,
+              beta_pattern = bp,
+              sim = b
+            )
+          
+          all_results[[iter]] <- combined
+          iter <- iter + 1
+        }
+      }
+    }
+  }
+}
+
+results_df <- bind_rows(all_results)
+
+```
+
+\pstart
+
+## Main Findings
+
+1. When EPV is small (EPV=5), Ridge performs better overall than MLE, showing:
+* higher or similar AUC
+* lower Brier scores
+* much lower variance
+* more realistic estimates when predictors are correlated
+
+2. At EPV=10, both methods perform comparably,
+* Although, Ridge remains slightly more stable, especially in the presence of noisy predictors.
+
+3. At EPV=50, MLE and Ridge are almost identical, because shrinkage is no longer needed.
+
+4. Ridge's adaptive penalty $(\lambda)$ adjusts appropriately:
+* strong shrinkage at low EPV
+* minimal shrinkage at high EPV
+
+\pstop
+
+\hstart
+
+## Random Forest vs. Maximum Likelihood & Ridge Regression
+
+\hstop
+
+\hstart
+
+# Conclusion
+
+\hstop
+
+\hstart
+
+# References
+
+\hstop
+
+\pstart
+
+van Smeden M, Moons KG, de Groot JA, et al. Sample size for binary logistic prediction models: Beyond events per variable criteria. Statistical Methods in Medical Research. 2018;28(8):2455-2474. doi:10.1177/0962280218784726
+
+\pstop

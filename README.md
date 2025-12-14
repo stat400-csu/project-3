@@ -2,6 +2,13 @@
 Group 3 Project for STAT400 @ CSU
 Authors: Andi Mellyn, Jessica Reyes, Hope Winsor
 
+# Notes to Andee
+
+You will find a folder titled "Andee" in the project directory. Inside that folder you will find our final paper titled "MC_Model_Comparison.Rmd". 
+You will also see 3 csv files in this folder. These are the model simulated datasets. When you run the code in our paper, the code blocks that simulate the data are set to "eval=FALSE".
+They are there for your viewing. The rest of the code in the paper relies on these 3 csv files that are read in. 
+This prevents running and knitting from taking too long.
+
 ## Model Simulation:
 Predictors:
 
@@ -20,14 +27,9 @@ Predictors:
 
 results in $3 \times 2 \times 4$ factor study with 24 models
 
-## TODO:
-- fix event fraction, $P(Y = 1)$
-    - propose 1/2 because that's what the graph shows
-   
-- determine predictors -- addition of EPV, removal of ???
-    - follow up to selecting EPV: figure shows EPV = 5, 10, 50 that we could replicate
 ## Model Analysis:
 
 - Ridge - Andi
 - Maximum likelihood - Jessica 
 - Random Forest - Hope 
+

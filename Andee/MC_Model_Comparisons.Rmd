@@ -1019,14 +1019,13 @@ ggplot(fig3) +
 
 \pstart
 
-results:
-- improved predictive performance when EPV increased
-- little association between Brier and EPV beyond EPV 20
-- CIL consistently close to perfect average except for Firth
-- CS improved with increasing EPV
-- all models except for Ridge showed signs of overfitting (CS above 1)
-- impact of shrinkage lessened with increasing EPV
-- little variation in Brier and CIL between shrinkage strategies
+The original study by van Smeden et al. demonstrated that events per variable (EPV) alone is not a sufficient criterion for determining sample size or predicting model performance in binary logistic regression. Instead, predictive performance was shown to depend on a combination of factors, including total sample size, number of predictors, event fraction, and modeling strategy. In Particular, regression shrinkage methods were found to improve stability and reduce overfitting in low EPV settings, while differences between methods decreased as EPV increased.
+
+Our results closely align with these conclusions. Across the three models, predictive performance generally improved with increasing EPV. Ridge regression consistently demonstrated stable behavior in low EPV settings and adapted naturally as complexity increased, while maximum likelihood performance improved as EPV grew. 
+
+With the addition of the random forest model, ...
+
+Taken together, our findings support the broader conclusion that model performance cannot be summarized by a single model parameter such as ($EPV \ge 10$). Instead, thoughtful consideration of data complexity, modeling strategy, and validation performance is essential when developing predictive models, particularly in high stakes clinical medicine settings.
 
 \pstop
 

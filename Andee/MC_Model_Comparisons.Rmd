@@ -311,6 +311,15 @@ ggplot(cal_df, aes(pred, obs)) +
 
 \hstop
 
+\pstart
+
+Ridge logistic regression was included to evaluate the effect of coefficient shrinkage on predictive performance under varying EPV conditions. Unlike maximum likelihood estimation, ridge regression applies an $L_2$ penalty to the regression coefficients, shrinking them towards zero while retaining all predictors in the model. This penalty stabilizes coefficient estimates in settings with limited sample size, correlated predictors, or for when conditions under which maximum likelihood estimation is known to be unstable.
+
+In this study, ridge regression models were fit using standardized predictors, and the strength of the penalty, $\lambda$, was automatically generated via cross-validation. This allows the degree of shrinkage to adapt depending on the other factors. As a result, ridge regression provides a useful contrast to maximum likelihood by trading small increases in bias for small reductions in variance making it an ideal benchmark.
+
+
+\pstop
+
 ```{r ridge regression}
 # ridge regression
 
@@ -470,8 +479,8 @@ ridge_condition_summary <- ridge_results |>
     .groups = "drop"
   )
 
-ridge_condition_summary
-knitr::kable(ridge_condition_summary, digits = 3)
+knitr::kable(head(ridge_condition_summary, digits = 3))
+knitr::kable(tail(ridge_condition_summary, digits = 3))
 
 ```
 
@@ -574,6 +583,14 @@ ridge_cal_df <- dat_cal |>
 ridge_cal_df
   
 ```
+
+\pstart
+
+Across all simulation conditions, ridge regression demonstrated consistent out-of-sample performance, particularly in low EPV settings. As EPV increased, ridge responded by decreasing variability across simulation runs. With higher AUC and lower brier scores, performance was also strong when observed in settings with correlated predictors. 
+
+Overall, ridge regression adapted smoothly to changes in data complexity. This behavior highlights ridge regression as a stable and reliable modeling approach across a wide range of practical data conditions.
+
+\pstop
 
 \hstart
 

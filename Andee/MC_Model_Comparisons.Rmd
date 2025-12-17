@@ -1,3 +1,4 @@
+
 ---
 title: "MC Model Comparisons"
 author: "Group 3: Andi Mellyn, Jessica Reyes, Hope Winsor"
@@ -154,6 +155,15 @@ predictors standardized to have mean zero and unit variance
 used to deal with collinearity (4), can also be used to deal with separation (3)
 
 GLMnet used to estimate Ridge, logistf used to estimate ML, MASS used to generate predictor data
+
+Maximum likelihood:
+Maximum likelihood estimation showed strong sensitivity to EPV, predictor noise, and correlation structure. 
+
+At low EPV, MLE exhibited substantial variability and degreaded predictive performance in the presence of noise predictors, consistent with overfitting. 
+
+Performance stablized as EPV increased, with MLE achieving efficient and low-variance estimates at EPV=50. 
+
+In contrast to Ridge regression, MLE provides no adaptive mechanism to control variance or penalize irrelevant predictors, making it less reliable in small-sample or noisy settings.
 
 \hstop
 

@@ -584,6 +584,19 @@ ridge_cal_df
   
 ```
 
+```{r calibration plot}
+
+ggplot(ridge_cal_df, aes(x = pred, y = obs)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, color = "limegreen", linetype = 2) +
+  xlim(0, 1) + ylim(0, 1) +
+  labs(
+    title = "Calibration Plot – Ridge Logistic Regression"
+  )
+
+```
+
 \pstart
 
 Across all simulation conditions, ridge regression demonstrated consistent out-of-sample performance, particularly in low EPV settings. As EPV increased, ridge responded by decreasing variability across simulation runs. With higher AUC and lower brier scores, performance was also strong when observed in settings with correlated predictors. 

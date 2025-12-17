@@ -98,74 +98,18 @@ simulate_logit <- function(N, P, rho, beta_pattern) {
 \hstart
 
 ## Background
-replicating "Sample size for binary logistic prediction models: Beyond events per variable criteria" by Smeden et al.
-
-out-of-sample performance of developed prediction models studied before and after regression shrinkage and variable selection
-
-concluded EPV does not have a strong relation with metrics of predictive performance and is not an appropriate cirterian for binary prediction model development studies
-
-better approximated by considering number of predictors, total sample size, and events fraction
-
-key contributing factor to predictive performance is size of data set relative to number of predictors
-
-events per variable: ratio of number of events, the number of observations in smaller of two outcome groups, relative to the number of degrees of freedom/parameters required to represent the predictors considered in the model
-
-medical literature uses EPV of 10 as minimum but there is skepticism as to the validity of the scientific backing of this benchmark. in step-wise predictor selection, EPV greater than 50 may be needed. Good out-of-sample predictive performance demonstrated with regression shrinkage techniques with EPV less than 10.
-
-modeling:
-predictive performance evaluated on large sample validation data sets
-
-maximum likelihood (ML), ridge regression, LASSO, Firth's correction, heuristic shrinkage after ML estimation, backwards elimination predictor selection
-
-EPV, the events fraction, number of candidate predictors, area under the ROC curve, distribution of predictor variables, type of predictor variable effects
-
-factorial simulation study with 4,032 models
-5,000 simulation runs
-
-1. development data set generated
-    a. for each of N = EPV * P/Pr(Y = 1) individuals, draw predictor variable vector $\mathbf{x}_i$
-    b. for each individual, generate $y_i$ = Bernoulli($\pi_i$)
-2. fit binary logistic prediction models with each of the considered regression shrinkage and predictor selection strategies
-3. large validation data set generated, N* = 5000/Pr(Y = 1), using sampling approach from (1)
-4. evaluate performance of prediction models (2) on validation data (3)
-
-measures of performance:
-- average loss of area under ROC curve: average difference between AUC of generated data and AUC of model (defined by distribution of predictor variables); higher values closer to zero indicate better discriminative performance
-- median calibration slope (CS): closer to 1 = better performance, cs < 1 = overfitting, cs > 1 = underfitting
-- average calibration in the large (CIL): difference between generated evens fraction and average estimated probabilities $\frac{\sum_{i} y_i}{N} - \frac{\sum_i \hat{\pi}_i}{N}$; closer to 0 = better performance, CIL > 0 = systematic overestimation of estimated probabilities, CIL < 0 = underestimation
-- average Brier score
-- square root of mean squared prediction error
-- mean absolute prediction error
-
-issues with maximum likelihood:
-
-1. not optimal for making model predictions of the expected risk in new individuals -- in most circumstances shrinkage estimators can be defined that have lower expected error for estimating probabilities in new individuals than ML estimators; benefit of shrinkage decreases with increasing EPV
-2. ML coefficients are biased toward more extreme effects; bias reduces with increasing EPV but may not completely disappear
-3. model estimation becomes unstable when predictor effects are large or sparse -- results in extreme probability estimates close to boundaries of 0 or 1; less likely with increasing EPV
-4. estimation becomes unstable when predictors are strongly correlated, inflates standard errors for predictor effects; spurious collinearity less likely with increasing EPV
-
-Ridge regression:
-penalizes the likelihood proportionally to the sum of squared predictor effects
-
-predictors standardized to have mean zero and unit variance
-
-10-fold cross validation used to determine the optimal value for the tuning parameter
-
-used to deal with collinearity (4), can also be used to deal with separation (3)
-
-GLMnet used to estimate Ridge, logistf used to estimate ML, MASS used to generate predictor data
 
 \hstop
 
+\pstart
 
-results:
-- improved predictive performance when EPV increased
-- little association between Brier and EPV beyond EPV 20
-- CIL consistently close to perfect average except for Firth
-- CS improved with increasing EPV
-- all models except for Ridge showed signs of overfitting (CS above 1)
-- impact of shrinkage lessened with increasing EPV
-- little variation in Brier and CIL between shrinkage strategies
+Binary logistic regression is a common method for developing clinical prediction models. Traditionally, guidance on choosing an appropriate sample size has relied on the concept of events per variable (EPV), defined as the ratio of the number of outcome events to the number of degrees of freedom, think signal to noise ratio. The "best" EPV value has been $\ge 10$. In practice, EPV is used to determine both the minimum sample size required for a study and the maximum number of predictors that can be included in a model.
+
+The study *Sample size for binary logistic prediction models: Beyond events per variable criteria* challenges the adequacy of this rule by examining whether EPV is truly the primary driver of out-of-sample predictive performance. Using a large Monte Carlo simulation study, van Smeden et al. evaluated predictive accuracy, calibration slope, AUC, and brier scores across 4,032 different combinations of data-generating scenarios run on 7 different models including maximum likelihood, backwards subset selection, firth's penalized likelihood, heuristic shrinkage, ridge, and LASSO. Their results show that EPV alone has a weak relationship with predictive performance.
+
+For our project, we focused on a subset of original simulation design. We replicated the core comparison between maximum likelihood and ridge logistic regression to examine how shrinkage affects predictive performance under varying EPV conditions. In addition, we extended the original framework by incorporating a random forest classifier, allowing us to assess whether a non-parametric machine learning approach exhibits similar sensitivity to EPV and sample size. By comparing these three modeling strategies under a shared simulation structure, we aimed to evaluate whether the limitations of EPV observed in logistic regression also persist in more flexible predictive models.
+
+\pstop
 
 \hstart
 
@@ -1045,6 +989,19 @@ ggplot(fig3) +
 # Conclusion
 
 \hstop
+
+\pstart
+
+results:
+- improved predictive performance when EPV increased
+- little association between Brier and EPV beyond EPV 20
+- CIL consistently close to perfect average except for Firth
+- CS improved with increasing EPV
+- all models except for Ridge showed signs of overfitting (CS above 1)
+- impact of shrinkage lessened with increasing EPV
+- little variation in Brier and CIL between shrinkage strategies
+
+\pstop
 
 \hstart
 

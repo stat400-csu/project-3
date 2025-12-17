@@ -611,7 +611,7 @@ Overall, ridge regression adapted smoothly to changes in data complexity. This b
 
 \hstop
 
-```{r}
+```{r, include = F}
 # Random Forest simulate logit function
 # requires factoring
 
@@ -642,7 +642,7 @@ simulate_logit_rf <- function(N, P, rho, beta_pattern) {
 
 ```
 
-```{r random forest}
+```{r random forest, include = F}
 # random forest fit model
 
 fit_rf_model <- function(dat) {
@@ -656,7 +656,7 @@ fit_rf_model <- function(dat) {
 
 ```
 
-```{r}
+```{r, include = F}
 
 fit_rf_model <- function(dat) {
   rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
@@ -669,7 +669,7 @@ fit_rf_model <- function(dat) {
 
 ```
 
-```{r}
+```{r, include = F}
 
 evaluate_rf_model <- function(fit, dat) {
   probs <- fit |> augment(new_data = dat) |> pull(.pred_1)
@@ -682,38 +682,8 @@ evaluate_rf_model <- function(fit, dat) {
 
 ```
 
-```{r}
-  # generate data 
-  EPV <- 50
-  event_frac <- 0.5
-  P <- 12
-  rho <- 0.5
-  bp <- "equal"
-  
-  # time model fit
-  start <-Sys.time()
-  
-  # Determine total sample size
-  N <- ceiling((EPV * P) / event_frac)
-  N_star <- ceiling(5000/event_frac)
-  
-  # Simulate dataset
-  df_train <- simulate_logit_rf(N, P, rho, bp)
-  df_test <- simulate_logit_rf(N_star, P, rho, bp)
-  
-  # fit model
-  rf <- fit_rf_model(df_train)
-  
-  # evaluate model
-  results <- evaluate_rf_model(rf, df_test)
-  
-  end <-  Sys.time()
-  end - start
-  # about 2 seconds per model * 10 simulations * 72 models = 1,4000 seconds or 24 minutes
-  
-```
 
-```{r forest_mc, eval=FALSE}
+```{r forest_mc, include = F, eval=FALSE}
 # run for all datasets
 
 set.seed(400)
@@ -771,11 +741,18 @@ write.csv(save_results, rf_path, row.names = FALSE)
 
 ```
 
-```{r read forest csv}
-# read file
+As an extension beyond the paper's research, we also chose to explore how EPV affects non-parametric models. Non-parametric models have the advantage over linear models of more accurately modeling non-linear relationships. Although the data simulated for this paper did have a linear relationship in truth, in the real world we often do not have the luxury of knowing the true relationships between predictors and an outcome. Thus non-parametric models can have superior prediction accuracy to linear models because they do not require such a relationship to be specified. Of the many possible non-parametric models, we chose to fit a random forest to the simulated data. We fit 500 trees on each simulated data set and at each split in a given tree, we considered $\sqrt{P}$ randomly selected predictors. Random forests have the benefit of providing information on feature importance, though they are less interpretable than linear models, as it is not possible to speak to how specific changes in a given predictor result in measurable changes in outcome. Additionally, random forests are more computationally expensive than linear models.
 
-forest_results <- read.csv(rf_path)
+```{r}
+library(ggplot2)
+library(tidyverse)
+rf_extra <- read.csv("../simulations_rmse_mae/random_forest_simulation_extra_values.csv")
 
+rf_extra <- rf_extra |>
+  mutate(P = factor(P),
+         EPV = factor(EPV),
+         beta_pattern = factor(beta_pattern))
+ggplot(rf_extra) + geom_boxplot(aes(x = Brier, color = EPV)) + facet_wrap(P ~ beta_pattern)
 ```
 
 

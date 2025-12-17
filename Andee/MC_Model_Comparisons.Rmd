@@ -790,6 +790,12 @@ rf_df$model    <- "Random Forest"
 
 \hstop
 
+\pstart
+
+Maximum likelihood and ridge logistic regression were compared directly to replicate the structure of the original study. These two models share the same underlying linear logistic framework, differing in the penalty provided by $\lambda$ shrinkage. This makes them a natural pair for isolating the effect of regularization on predictive performance under varying EPV conditions. By reproducing this comparison, we establish a baseline that aligns with the original research before extending the analysis to a non-linear but more flexible machine learning model, random forest.
+
+\pstop
+
 ```{r maximum likelihood vs ridge}
 # Maximum Likelihood vs Ridge
 
@@ -879,27 +885,6 @@ results_df <- bind_rows(all_results)
 
 ```
 
-\pstart
-
-## Main Findings
-
-1. When EPV is small (EPV=5), Ridge performs better overall than MLE, showing:
-* higher or similar AUC
-* lower Brier scores
-* much lower variance
-* more realistic estimates when predictors are correlated
-
-2. At EPV=10, both methods perform comparably,
-* Although, Ridge remains slightly more stable, especially in the presence of noisy predictors.
-
-3. At EPV=50, MLE and Ridge are almost identical, because shrinkage is no longer needed.
-
-4. Ridge's adaptive penalty $(\lambda)$ adjusts appropriately:
-* strong shrinkage at low EPV
-* minimal shrinkage at high EPV
-
-\pstop
-
 ```{r}
 # binding mle & ridge
 
@@ -939,6 +924,18 @@ ggplot(mean_mle_ridge, aes(x = factor(P), y = factor(EPV), fill = mean_Brier)) +
   scale_fill_viridis_c(option = "magma") +
   labs(title = "Mean Brier (MLE vs Ridge)", x = "P", y = "EPV", fill = "Mean Brier")
 ```
+
+\hstart
+
+### Maximum Likelihood vs. Ridge Logistic Regression Results
+
+\hstop
+
+\pstart
+
+Across the simulated conditions, clear differences emerged between maximum likelihood and ridge regression, particularly at low EPV. When EPV was small ($EPV = 5$), ridge regression consistently produced higher AUC values and lower brier scores than maximum likelihood, with less variability. These differences were most pronounced in settings with correlated predictors and partially noisy data features, where maximum likelihood performance was more unstable. At $EPV = 10$, performance between the two models became less pronounced, though ridge regression remained slightly more consistent across repetitions. As EPV increased to 50, differences between maximum likelihood and ridge largely disappeared, with both models achieving comparable results and error. This convergence reflects the reduced need for shrinkage when sample size is large. Overall, the comparison confirms that ridge regression provides meaningful gains in predictive accuracy when EPV is low, while offering no disadvantages as EPV increases.
+
+\pstop
 
 \hstart
 

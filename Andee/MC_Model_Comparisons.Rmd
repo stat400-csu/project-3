@@ -100,15 +100,6 @@ simulate_logit <- function(N, P, rho, beta_pattern) {
 
 ## Background
 
-Maximum likelihood:
-Maximum likelihood estimation showed strong sensitivity to EPV, predictor noise, and correlation structure. 
-
-At low EPV, MLE exhibited substantial variability and degreaded predictive performance in the presence of noise predictors, consistent with overfitting. 
-
-Performance stablized as EPV increased, with MLE achieving efficient and low-variance estimates at EPV=50. 
-
-In contrast to Ridge regression, MLE provides no adaptive mechanism to control variance or penalize irrelevant predictors, making it less reliable in small-sample or noisy settings.
-
 \hstop
 
 \pstart
@@ -124,6 +115,19 @@ For our project, we focused on a subset of original simulation design. We replic
 \hstart
 
 ## 1. Maximum Liklihood
+
+\pstart
+
+Maximum likelihood:
+Maximum likelihood estimation showed strong sensitivity to EPV, predictor noise, and correlation structure. 
+
+At low EPV, MLE exhibited substantial variability and degreaded predictive performance in the presence of noise predictors, consistent with overfitting. 
+
+Performance stablized as EPV increased, with MLE achieving efficient and low-variance estimates at EPV=50. 
+
+In contrast to Ridge regression, MLE provides no adaptive mechanism to control variance or penalize irrelevant predictors, making it less reliable in small-sample or noisy settings.
+
+\pstop
 
 \hstop
 

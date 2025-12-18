@@ -295,6 +295,18 @@ mle_results <- read.csv(mle_path)
 
 ```
 
+\hstart
+
+## ROC
+
+\hstop
+
+\pstart
+
+The ROC curve shows that the logistic MLE model can tell the two outcome groups apart better than random guessing, because the curve lies above the diagonal.
+
+\pstop
+
 ```{r}
 
 roc_obj <- roc(dat_mle$y, predict(fit_mle, newdata = dat_mle, type="response"))
@@ -302,6 +314,18 @@ plot(roc_obj, col="rosybrown", lwd=2)
 
 ```
 
+
+\hstart
+
+## Calibration Plots
+
+\hstop
+
+\pstart
+
+The calibration curve follows the diagonal closely, indicating good overall calibration, but it rises slightly above the predicted probabilities of about 0.25-0.50, meaning the model slightly underestimates the true event probability in that range.
+
+\pstop
 ```{r mle calibration}
 # MLE calibration plot
 

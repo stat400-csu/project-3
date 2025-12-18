@@ -114,7 +114,9 @@ For our project, we focused on a subset of original simulation design. We replic
 
 \hstart
 
-## 1. Maximum Liklihood
+## 1. Maximum Likelihood
+
+\hstop
 
 \pstart
 
@@ -128,7 +130,6 @@ In contrast to Ridge regression, MLE provides no adaptive mechanism to control v
 
 \pstop
 
-\hstop
 
 ```{r maximum likelihood}
 # Maximum Likelihood

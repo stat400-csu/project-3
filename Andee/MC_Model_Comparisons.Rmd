@@ -19,6 +19,7 @@ library(pROC)
 library(randomForest)
 library(dplyr)
 library(here)
+
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE)
 ```
 
@@ -671,14 +672,14 @@ Maximum likelihood and ridge logistic regression were compared directly to repli
 
 \pstop
 
-```{r}
+```{r, echo = F}
 # binding mle & ridge
 
 mle_ridge_results <- bind_rows(mle_df, ridge_df)
 
 ```
 
-```{r boxplots mle_ridge}
+```{r boxplots mle_ridge, echo = F}
 
 ggplot(mle_ridge_results, aes(x = model, y = AUC, fill = model)) +
   geom_boxplot(alpha = 0.7, outlier.alpha = 0.3) +
@@ -692,7 +693,7 @@ ggplot(mle_ridge_results, aes(x = model, y = Brier, fill = model)) +
 
 ```
 
-```{r heatmaps mle_ridge}
+```{r heatmaps mle_ridge, echo = F}
 
 mean_mle_ridge <- mle_ridge_results |>
   group_by(model, EPV, P) |>
@@ -729,17 +730,18 @@ Across the simulated conditions, clear differences emerged between maximum likel
 
 \hstop
 
-```{r bind all models}
-
-all_results <- bind_rows(mle_df, ridge_df, rf_df)
-
+```{r bind all models, echo = F}
 ridge_extra <- read.csv(ridge_extra_path)
 mle_extra   <- read.csv(mle_extra_path)
 rf_extra    <- read.csv(rf_extra_path)
 
 ```
 
-```{r extra_metrics_plots, out.width="100%"}
+```{r, echo = F, fig.width = 2, fig.height = 4}
+include_graphics("../images/fig2_boxplots_article.jpg")
+```
+
+```{r extra_metrics_plots, fig.width = 4, fig.height = 7, echo = F}
 
 ridge_extra$model <- "Ridge"
 rf_extra$model <- "Random Forest"
@@ -758,10 +760,10 @@ ggplot(fig2) +
   geom_boxplot(aes(x = model, y = value)) + 
   facet_wrap(measure ~ EPV, scale = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "", y = "", caption = "predictor selection strategies perform worse")
+  labs(x = "", y = "")
 ```
 
-```{r}
+```{r, echo = F}
 fig3 <- combined_metrics  |>
   mutate(model = factor(model, level = c("Ridge", "ML", "Random Forest")),
          P = factor(P),

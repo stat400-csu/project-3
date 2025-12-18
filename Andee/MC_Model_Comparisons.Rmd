@@ -761,9 +761,11 @@ rf_extra    <- read.csv(rf_extra_path)
 
 ```
 
-```{r, echo = F, fig.width = 2, fig.height = 4}
+```{r, echo = F}
 include_graphics("../images/fig2_boxplots_article.jpg")
 ```
+
+The image above is Figure 2 from the article we replicated. It shows that as EPV increases, all models report higher testing accuracy and that between models accuracy became more consistent, as measured by mean absolute error and root mean squared error. Different models had consistent Brier scores given a specific EPV. Additionally as EPV increases, all models show an improvement in calibration, as measured by $\Delta$AUC, the difference in AUC between the underlying truth and the model fit on the simulated data, CIL, and CS. Ridge regression performs better than maximum likelihood for both $\Delta$ AUC and CS and performs similarly in CIL.
 
 ```{r extra_metrics_plots, fig.width = 4, fig.height = 7, echo = F}
 
@@ -786,6 +788,10 @@ ggplot(fig2) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x = "", y = "")
 ```
+
+This plot is a replication of Figure 2 from the paper. This verifies the conclusions of the paper, where accuracy increases with EPV and ridge regression performs better than maximum likelihood, especially when EPV is low. This plot also reveals that random forests perform worse than both ridge regression and maximum likelihood, especially as EPV increases. This is because the underlying data was simulated with a linear relationship in all data sets. Both ridge regression model linear relationships, but random forests use model using step functions, which are ill suited to linear relationships. As EPV and thus the number of data points simulated increases, both ridge regression and ML are better able to replicate the underlying linear relationship. In contrast, random foresting demonstrates only mild improvements with the increase in data.
+
+
 
 ```{r, echo = F}
 fig3 <- combined_metrics  |>

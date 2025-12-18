@@ -99,62 +99,6 @@ simulate_logit <- function(N, P, rho, beta_pattern) {
 \hstart
 
 ## Background
-replicating "Sample size for binary logistic prediction models: Beyond events per variable criteria" by Smeden et al.
-
-out-of-sample performance of developed prediction models studied before and after regression shrinkage and variable selection
-
-concluded EPV does not have a strong relation with metrics of predictive performance and is not an appropriate cirterian for binary prediction model development studies
-
-better approximated by considering number of predictors, total sample size, and events fraction
-
-key contributing factor to predictive performance is size of data set relative to number of predictors
-
-events per variable: ratio of number of events, the number of observations in smaller of two outcome groups, relative to the number of degrees of freedom/parameters required to represent the predictors considered in the model
-
-medical literature uses EPV of 10 as minimum but there is skepticism as to the validity of the scientific backing of this benchmark. in step-wise predictor selection, EPV greater than 50 may be needed. Good out-of-sample predictive performance demonstrated with regression shrinkage techniques with EPV less than 10.
-
-modeling:
-predictive performance evaluated on large sample validation data sets
-
-maximum likelihood (ML), ridge regression, LASSO, Firth's correction, heuristic shrinkage after ML estimation, backwards elimination predictor selection
-
-EPV, the events fraction, number of candidate predictors, area under the ROC curve, distribution of predictor variables, type of predictor variable effects
-
-factorial simulation study with 4,032 models
-5,000 simulation runs
-
-1. development data set generated
-    a. for each of N = EPV * P/Pr(Y = 1) individuals, draw predictor variable vector $\mathbf{x}_i$
-    b. for each individual, generate $y_i$ = Bernoulli($\pi_i$)
-2. fit binary logistic prediction models with each of the considered regression shrinkage and predictor selection strategies
-3. large validation data set generated, N* = 5000/Pr(Y = 1), using sampling approach from (1)
-4. evaluate performance of prediction models (2) on validation data (3)
-
-measures of performance:
-- average loss of area under ROC curve: average difference between AUC of generated data and AUC of model (defined by distribution of predictor variables); higher values closer to zero indicate better discriminative performance
-- median calibration slope (CS): closer to 1 = better performance, cs < 1 = overfitting, cs > 1 = underfitting
-- average calibration in the large (CIL): difference between generated evens fraction and average estimated probabilities $\frac{\sum_{i} y_i}{N} - \frac{\sum_i \hat{\pi}_i}{N}$; closer to 0 = better performance, CIL > 0 = systematic overestimation of estimated probabilities, CIL < 0 = underestimation
-- average Brier score
-- square root of mean squared prediction error
-- mean absolute prediction error
-
-issues with maximum likelihood:
-
-1. not optimal for making model predictions of the expected risk in new individuals -- in most circumstances shrinkage estimators can be defined that have lower expected error for estimating probabilities in new individuals than ML estimators; benefit of shrinkage decreases with increasing EPV
-2. ML coefficients are biased toward more extreme effects; bias reduces with increasing EPV but may not completely disappear
-3. model estimation becomes unstable when predictor effects are large or sparse -- results in extreme probability estimates close to boundaries of 0 or 1; less likely with increasing EPV
-4. estimation becomes unstable when predictors are strongly correlated, inflates standard errors for predictor effects; spurious collinearity less likely with increasing EPV
-
-Ridge regression:
-penalizes the likelihood proportionally to the sum of squared predictor effects
-
-predictors standardized to have mean zero and unit variance
-
-10-fold cross validation used to determine the optimal value for the tuning parameter
-
-used to deal with collinearity (4), can also be used to deal with separation (3)
-
-GLMnet used to estimate Ridge, logistf used to estimate ML, MASS used to generate predictor data
 
 Maximum likelihood:
 Maximum likelihood estimation showed strong sensitivity to EPV, predictor noise, and correlation structure. 
@@ -167,15 +111,15 @@ In contrast to Ridge regression, MLE provides no adaptive mechanism to control v
 
 \hstop
 
+\pstart
 
-results:
-- improved predictive performance when EPV increased
-- little association between Brier and EPV beyond EPV 20
-- CIL consistently close to perfect average except for Firth
-- CS improved with increasing EPV
-- all models except for Ridge showed signs of overfitting (CS above 1)
-- impact of shrinkage lessened with increasing EPV
-- little variation in Brier and CIL between shrinkage strategies
+Binary logistic regression is a common method for developing clinical prediction models. Traditionally, guidance on choosing an appropriate sample size has relied on the concept of events per variable (EPV), defined as the ratio of the number of outcome events to the number of degrees of freedom, think signal to noise ratio. The "best" EPV value has been $\ge 10$. In practice, EPV is used to determine both the minimum sample size required for a study and the maximum number of predictors that can be included in a model.
+
+The study *Sample size for binary logistic prediction models: Beyond events per variable criteria* challenges the adequacy of this rule by examining whether EPV is truly the primary driver of out-of-sample predictive performance. Using a large Monte Carlo simulation study, van Smeden et al. evaluated predictive accuracy, calibration slope, AUC, and brier scores across 4,032 different combinations of data-generating scenarios run on 7 different models including maximum likelihood, backwards subset selection, firth's penalized likelihood, heuristic shrinkage, ridge, and LASSO. Their results show that EPV alone has a weak relationship with predictive performance.
+
+For our project, we focused on a subset of original simulation design. We replicated the core comparison between maximum likelihood and ridge logistic regression to examine how shrinkage affects predictive performance under varying EPV conditions. In addition, we extended the original framework by incorporating a random forest classifier, allowing us to assess whether a non-parametric machine learning approach exhibits similar sensitivity to EPV and sample size. By comparing these three modeling strategies under a shared simulation structure, we aimed to evaluate whether the limitations of EPV observed in logistic regression also persist in more flexible predictive models.
+
+\pstop
 
 \hstart
 
@@ -377,6 +321,15 @@ ggplot(cal_df, aes(pred, obs)) +
 
 \hstop
 
+\pstart
+
+Ridge logistic regression was included to evaluate the effect of coefficient shrinkage on predictive performance under varying EPV conditions. Unlike maximum likelihood estimation, ridge regression applies an $L_2$ penalty to the regression coefficients, shrinking them towards zero while retaining all predictors in the model. This penalty stabilizes coefficient estimates in settings with limited sample size, correlated predictors, or for when conditions under which maximum likelihood estimation is known to be unstable.
+
+In this study, ridge regression models were fit using standardized predictors, and the strength of the penalty, $\lambda$, was automatically generated via cross-validation. This allows the degree of shrinkage to adapt depending on the other factors. As a result, ridge regression provides a useful contrast to maximum likelihood by trading small increases in bias for small reductions in variance making it an ideal benchmark.
+
+
+\pstop
+
 ```{r ridge regression}
 # ridge regression
 
@@ -536,8 +489,8 @@ ridge_condition_summary <- ridge_results |>
     .groups = "drop"
   )
 
-ridge_condition_summary
-knitr::kable(ridge_condition_summary, digits = 3)
+knitr::kable(head(ridge_condition_summary, digits = 3))
+knitr::kable(tail(ridge_condition_summary, digits = 3))
 
 ```
 
@@ -641,177 +594,46 @@ ridge_cal_df
   
 ```
 
+```{r calibration plot}
+
+ggplot(ridge_cal_df, aes(x = pred, y = obs)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, color = "limegreen", linetype = 2) +
+  xlim(0, 1) + ylim(0, 1) +
+  labs(
+    title = "Calibration Plot – Ridge Logistic Regression"
+  )
+
+```
+
+\pstart
+
+Across all simulation conditions, ridge regression demonstrated consistent out-of-sample performance, particularly in low EPV settings. As EPV increased, ridge responded by decreasing variability across simulation runs. With higher AUC and lower brier scores, performance was also strong when observed in settings with correlated predictors. 
+
+Overall, ridge regression adapted smoothly to changes in data complexity. This behavior highlights ridge regression as a stable and reliable modeling approach across a wide range of practical data conditions.
+
+\pstop
+
 \hstart
 
 ## 3. Random Forest
 
 \hstop
+As an extension beyond the paper's research, we also chose to explore how EPV affects non-parametric models. Non-parametric models have the advantage over linear models of more accurately modeling non-linear relationships. Although the data simulated for this paper did have a linear relationship in truth, in the real world we often do not have the luxury of knowing the true relationships between predictors and an outcome. Thus non-parametric models can have superior prediction accuracy to linear models because they do not require such a relationship to be specified. Of the many possible non-parametric models, we chose to fit a random forest to the simulated data. We fit 500 trees on each simulated data set and at each split in a given tree, we considered $\sqrt{P}$ randomly selected predictors. Random forests have the benefit of providing information on feature importance, though they are less interpretable than linear models, as it is not possible to speak to how specific changes in a given predictor result in measurable changes in outcome. Additionally, random forests are more computationally expensive than linear models.
 
-```{r}
-# Random Forest simulate logit function
-# requires factoring
+The plot below shows prediction accuracy as measured by the Brier score for each combination of number of predictors and predictor effect. An EPV of 5 performs the worst across all combinations, followed by an EPV of 10, and then an EPV of 50. When half the predictors are given a coefficient of 0 in truth (labeled "halfnoise"), the variation in Brier score is smaller than the other predictor effects given a certain number of predictors. This is because random forests do predictor selection at each split of a tree. When only half the predictors are significant, the random forest generates trees that are more similar to one another, resulting in more similar predictions. There is more variation across models as the number of predictors increases regardless of the predictor effect, though a higher number of predictors results in better accuracy on average. This is because the number of predictors is directly proportional to the number of data points simulated in the training set. More data allows the random forest more information and thus better accuracy. The variance is also larger because more predictors means more possible combinations of predictors when building trees, so the trees were more different to each other.
 
-simulate_logit_rf <- function(N, P, rho, beta_pattern) {
-  Sigma <- matrix(rho, P, P)
-  diag(Sigma) <- 1
-  
-  X <- mvrnorm(n = N, mu = rep(0, P), Sigma = Sigma)
-  
-  if (beta_pattern == "equal") {
-    beta <- rep(0.5, P)
-  } else if (beta_pattern == "strong") {
-    beta <- c(1.0, rep(0.2, P-1))
-  } else if (beta_pattern == "noise") {
-    beta <- c(0, rep(0.3, P-1))
-  } else if (beta_pattern == "halfnoise") {
-    beta <- c(rep(0, P/2), rep(0.3, P/2))
-  } else {
-    stop("Unknown beta pattern")
-  }
-  
-  eta <- X %*% beta
-  pi  <- 1/(1 + exp(-eta))
-  y <- as.factor(rbinom(N, 1, pi))
-  
-  data.frame(y = y, X)
-}
+```{r, echo = F}
+library(ggplot2)
+library(tidyverse)
+rf_extra <- read.csv("../simulations_rmse_mae/random_forest_simulation_extra_values.csv")
 
-```
-
-```{r random forest}
-# random forest fit model
-
-fit_rf_model <- function(dat) {
-  rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
-  set_engine("randomForest", importance = TRUE) |>
-  set_mode("classification")
-
-  rf_fit <- rf_spec |> fit(y ~ ., data = dat)
-  rf_fit
-}
-
-```
-
-```{r}
-
-fit_rf_model <- function(dat) {
-  rf_spec <- rand_forest(mtry = sqrt(.cols())) |>
-  set_engine("randomForest", importance = TRUE) |>
-  set_mode("classification")
-
-  rf_fit <- rf_spec |> fit(y ~ ., data = dat)
-  rf_fit
-}
-
-```
-
-```{r}
-
-evaluate_rf_model <- function(fit, dat) {
-  probs <- fit |> augment(new_data = dat) |> pull(.pred_1)
-  
-  auc_val <- auc(as.numeric(dat$y), as.numeric(probs))
-  brier <- mean((as.numeric(dat$y) - as.numeric(probs))^2)
-  
-  tibble(AUC = as.numeric(auc_val), Brier = brier)
-}
-
-```
-
-```{r}
-  # generate data 
-  EPV <- 50
-  event_frac <- 0.5
-  P <- 12
-  rho <- 0.5
-  bp <- "equal"
-  
-  # time model fit
-  start <-Sys.time()
-  
-  # Determine total sample size
-  N <- ceiling((EPV * P) / event_frac)
-  N_star <- ceiling(5000/event_frac)
-  
-  # Simulate dataset
-  df_train <- simulate_logit_rf(N, P, rho, bp)
-  df_test <- simulate_logit_rf(N_star, P, rho, bp)
-  
-  # fit model
-  rf <- fit_rf_model(df_train)
-  
-  # evaluate model
-  results <- evaluate_rf_model(rf, df_test)
-  
-  end <-  Sys.time()
-  end - start
-  # about 2 seconds per model * 10 simulations * 72 models = 1,4000 seconds or 24 minutes
-  
-```
-
-```{r forest_mc, eval=FALSE}
-# run for all datasets
-
-set.seed(400)
-
-EPV_vals <- c(5, 10, 50)
-event_frac <- 0.5
-
-P_vals <- c(4, 8, 12)
-rho_vals <- c(0, 0.5)
-beta_patterns <- c("equal", "strong", "noise", "halfnoise")
-
-B <- 10  # number of Monte Carlo repetitions
-
-save_results <- data.frame()
-
-for (EPV in EPV_vals) {
-  for (P in P_vals) {
-    for (rho in rho_vals) {
-      for (bp in beta_patterns) {
-        for (b in 1:B) {
-          
-          # Determine total sample size
-          N <- ceiling((EPV * P) / event_frac)
-          N_star <- ceiling(5000/event_frac)
-          
-          # Simulate dataset
-          df_train <- simulate_logit_rf(N, P, rho, bp)
-          df_test <- simulate_logit_rf(N_star, P, rho, bp)
-          
-          # fit random forest
-          fit <- fit_rf_model(df_train)
-          
-          # evaluate random forest
-          eval_rf <- evaluate_rf_model(fit, df_test)
-          
-          ### Store combined ###
-          combined <- eval_rf %>%
-            mutate(
-              EPV = EPV,
-              P = P,
-              rho = rho,
-              beta_pattern = bp,
-              sim = b
-            )
-          save_results <- rbind(save_results, combined)
-        }
-      }
-    }
-  }
-}
-
-save_results$model <- "Random Forest"
-save_results$lambda <- NA
-write.csv(save_results, rf_path, row.names = FALSE)
-
-```
-
-```{r read forest csv}
-# read file
-
-forest_results <- read.csv(rf_path)
-
+rf_extra <- rf_extra |>
+  mutate(P = factor(P),
+         EPV = factor(EPV),
+         beta_pattern = factor(beta_pattern))
+ggplot(rf_extra) + geom_boxplot(aes(x = Brier, color = EPV)) + facet_wrap(P ~ beta_pattern)
 ```
 
 
@@ -839,113 +661,9 @@ rf_df$model    <- "Random Forest"
 
 \hstop
 
-```{r maximum likelihood vs ridge}
-# Maximum Likelihood vs Ridge
-
-fit_logistic_ridge <- function(dat) {
-  X <- as.matrix(dat[, -1])
-  y <- dat$y
-  
-  cv.glmnet(x = X, y = y, alpha = 0, family = "binomial")
-}
-
-evaluate_ridge_model <- function(cvfit, dat) {
-  X <- as.matrix(dat[, -1])
-  y <- dat$y
-  
-  probs <- predict(cvfit, newx = X, type = "response", s = "lambda.min")
-  
-  auc_val <- auc(y, probs)
-  brier <- mean((y - probs)^2)
-  
-  tibble(
-    AUC = as.numeric(auc_val),
-    Brier = brier,
-    lambda = cvfit$lambda.min
-  )
-}
-
-```
-
-```{r eval=FALSE}
-# slow code chunk
-
-set.seed(400)
-
-EPV_vals <- c(5, 10, 50)
-event_frac <- 0.5    # FIXED
-
-P_vals <- c(4, 8, 12)
-rho_vals <- c(0, 0.5)
-beta_patterns <- c("equal", "strong", "noise", "halfnoise")
-
-B <- 10  # number of Monte Carlo repetitions
-
-all_results <- list()
-iter <- 1
-
-for (EPV in EPV_vals) {
-  for (P in P_vals) {
-    for (rho in rho_vals) {
-      for (bp in beta_patterns) {
-        for (b in 1:B) {
-          
-          # Determine total sample size
-          N <- ceiling((EPV * P) / event_frac)
-          
-          # Simulate dataset
-          dat <- simulate_logit(N, P, rho, bp)
-          
-          ### MLE ###
-          fit_mle <- fit_logistic_mle(dat)
-          eval_mle <- evaluate_mle_model(fit_mle, dat)
-          eval_mle$model <- "MLE"
-          
-          ### Ridge ###
-          fit_ridge <- fit_logistic_ridge(dat)
-          eval_ridge <- evaluate_ridge_model(fit_ridge, dat)
-          eval_ridge$model <- "Ridge"
-          
-          ### Store combined ###
-          combined <- bind_rows(eval_mle, eval_ridge) %>%
-            mutate(
-              EPV = EPV,
-              P = P,
-              rho = rho,
-              beta_pattern = bp,
-              sim = b
-            )
-          
-          all_results[[iter]] <- combined
-          iter <- iter + 1
-        }
-      }
-    }
-  }
-}
-
-results_df <- bind_rows(all_results)
-
-```
-
 \pstart
 
-## Main Findings
-
-1. When EPV is small (EPV=5), Ridge performs better overall than MLE, showing:
-* higher or similar AUC
-* lower Brier scores
-* much lower variance
-* more realistic estimates when predictors are correlated
-
-2. At EPV=10, both methods perform comparably,
-* Although, Ridge remains slightly more stable, especially in the presence of noisy predictors.
-
-3. At EPV=50, MLE and Ridge are almost identical, because shrinkage is no longer needed.
-
-4. Ridge's adaptive penalty $(\lambda)$ adjusts appropriately:
-* strong shrinkage at low EPV
-* minimal shrinkage at high EPV
+Maximum likelihood and ridge logistic regression were compared directly to replicate the structure of the original study. These two models share the same underlying linear logistic framework, differing in the penalty provided by $\lambda$ shrinkage. This makes them a natural pair for isolating the effect of regularization on predictive performance under varying EPV conditions. By reproducing this comparison, we establish a baseline that aligns with the original research before extending the analysis to a non-linear but more flexible machine learning model, random forest.
 
 \pstop
 
@@ -988,6 +706,18 @@ ggplot(mean_mle_ridge, aes(x = factor(P), y = factor(EPV), fill = mean_Brier)) +
   scale_fill_viridis_c(option = "magma") +
   labs(title = "Mean Brier (MLE vs Ridge)", x = "P", y = "EPV", fill = "Mean Brier")
 ```
+
+\hstart
+
+### Maximum Likelihood vs. Ridge Logistic Regression Results
+
+\hstop
+
+\pstart
+
+Across the simulated conditions, clear differences emerged between maximum likelihood and ridge regression, particularly at low EPV. When EPV was small ($EPV = 5$), ridge regression consistently produced higher AUC values and lower brier scores than maximum likelihood, with less variability. These differences were most pronounced in settings with correlated predictors and partially noisy data features, where maximum likelihood performance was more unstable. At $EPV = 10$, performance between the two models became less pronounced, though ridge regression remained slightly more consistent across repetitions. As EPV increased to 50, differences between maximum likelihood and ridge largely disappeared, with both models achieving comparable results and error. This convergence reflects the reduced need for shrinkage when sample size is large. Overall, the comparison confirms that ridge regression provides meaningful gains in predictive accuracy when EPV is low, while offering no disadvantages as EPV increases.
+
+\pstop
 
 \hstart
 
@@ -1055,6 +785,18 @@ ggplot(fig3) +
 # Conclusion
 
 \hstop
+
+\pstart
+
+The original study by van Smeden et al. demonstrated that events per variable (EPV) alone is not a sufficient criterion for determining sample size or predicting model performance in binary logistic regression. Instead, predictive performance was shown to depend on a combination of factors, including total sample size, number of predictors, event fraction, and modeling strategy. In Particular, regression shrinkage methods were found to improve stability and reduce overfitting in low EPV settings, while differences between methods decreased as EPV increased.
+
+Our results closely align with these conclusions. Across the three models, predictive performance generally improved with increasing EPV. Ridge regression consistently demonstrated stable behavior in low EPV settings and adapted naturally as complexity increased, while maximum likelihood performance improved as EPV grew. 
+
+With the addition of the random forest model, ...
+
+Taken together, our findings support the broader conclusion that model performance cannot be summarized by a single model parameter such as ($EPV \ge 10$). Instead, thoughtful consideration of data complexity, modeling strategy, and validation performance is essential when developing predictive models, particularly in high stakes clinical medicine settings.
+
+\pstop
 
 \hstart
 

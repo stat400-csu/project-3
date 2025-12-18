@@ -9,6 +9,18 @@ You will also see 3 csv files in this folder. These are the model simulated data
 They are there for your viewing. The rest of the code in the paper relies on these 3 csv files that are read in. 
 This prevents running and knitting from taking too long.
 
+Data simulation was done in four files: 
+
+- MLE.Rmd simulates and saves the MLE data
+- RandomForest.Rmd simulates and saves the random forest data
+- Ridge_mc_testingdata.Rmd simulates and saves the ridge regression data
+- resimulate_extra_metrics.Rmd adds additional evaluation metrics (RMSE and MAE) to all three models
+
+These files do not need to be run to run the paper or presentation because their results are saved to csvs but they remain in the project for reproducibility reasons.
+
+The presentation shown in class and submitted on Canvas is Estimating Truth by Repitition_copy.qmd.
+
+
 ## Model Simulation:
 Predictors:
 

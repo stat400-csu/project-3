@@ -761,7 +761,7 @@ rf_extra    <- read.csv(rf_extra_path)
 
 ```
 
-```{r, echo = F}
+```{r, echo = F, out.width = "60%"}
 include_graphics("../images/fig2_boxplots_article.jpg")
 ```
 
@@ -791,7 +791,11 @@ ggplot(fig2) +
 
 This plot is a replication of Figure 2 from the paper. This verifies the conclusions of the paper, where accuracy increases with EPV and ridge regression performs better than maximum likelihood, especially when EPV is low. This plot also reveals that random forests perform worse than both ridge regression and maximum likelihood, especially as EPV increases. This is because the underlying data was simulated with a linear relationship in all data sets. Both ridge regression model linear relationships, but random forests use model using step functions, which are ill suited to linear relationships. As EPV and thus the number of data points simulated increases, both ridge regression and ML are better able to replicate the underlying linear relationship. In contrast, random foresting demonstrates only mild improvements with the increase in data.
 
+```{r, echo = F, out.width = "60%"}
+include_graphics("../images/fig3_heatmap_article.jpg")
+```
 
+This image is figure 3 from the paper we replicated. It shows that across all metrics ridge regression performs better than maximum likelihood, examining a variety of simulation inputs.
 
 ```{r, echo = F}
 fig3 <- combined_metrics  |>
@@ -814,7 +818,7 @@ ggplot(fig3) +
   facet_wrap( ~ parameter, scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-
+These plots are our replication of figure 3. This matches the conclusions drawn by the box plot. Ridge regression and ML performed as expected from the paper, while random forest performs worse than both. It is difficult to conclude from the random forest model whether EPV is a meaningful metric for non-parametric models. The random forest was unsuited to the linear data and so consistently performed with lower accuracy than either of the other two models, regardless of EPV. The random forest did show similar trends to the other two models, so it is possible that EPV is likewise incapable of encapsulating all the nuances regarding accuracy estimation, but further study including the simulation of non-linear relationships between predictors and the outcome would be required to verify this.
 
 \hstart
 
@@ -826,9 +830,7 @@ ggplot(fig3) +
 
 The original study by van Smeden et al. demonstrated that events per variable (EPV) alone is not a sufficient criterion for determining sample size or predicting model performance in binary logistic regression. Instead, predictive performance was shown to depend on a combination of factors, including total sample size, number of predictors, event fraction, and modeling strategy. In Particular, regression shrinkage methods were found to improve stability and reduce overfitting in low EPV settings, while differences between methods decreased as EPV increased.
 
-Our results closely align with these conclusions. Across the three models, predictive performance generally improved with increasing EPV. Ridge regression consistently demonstrated stable behavior in low EPV settings and adapted naturally as complexity increased, while maximum likelihood performance improved as EPV grew. 
-
-With the addition of the random forest model, ...
+Our results closely align with these conclusions. Across the three models, predictive performance generally improved with increasing EPV. Ridge regression consistently demonstrated stable behavior in low EPV settings and adapted naturally as complexity increased, while maximum likelihood performance improved as EPV grew. Random forest models likewise demonstrated improved performance as EPV grew.
 
 Taken together, our findings support the broader conclusion that model performance cannot be summarized by a single model parameter such as ($EPV \ge 10$). Instead, thoughtful consideration of data complexity, modeling strategy, and validation performance is essential when developing predictive models, particularly in high stakes clinical medicine settings.
 
